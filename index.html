@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="apple-touch-icon" href="icon.png">
-    <title>Sleepy Bobby - Optimized</title>
+    <title>Sleepy Bobby</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Bobby">
     <style>
         :root {
             --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --primary: #38bdf8;
@@ -18,18 +19,13 @@
 
         .anim-container { position: absolute; top: 0; left: 0; width: 100%; height: 60%; z-index: 0; overflow: hidden; pointer-events: none; }
         
-        /* PLUIE CSS (Optimisée GPU) */
+        /* PLUIE - Image Base64 pour éviter une requête HTTP */
         .rain { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=='); opacity: 0; transition: opacity 1s; }
         .rain.active { opacity: 0.1; animation: rainAnim 0.5s linear infinite; }
         @keyframes rainAnim { 0% { background-position: 0 0; } 100% { background-position: 20px 100px; } }
 
-        /* NEIGE CSS */
-        .snow { position: absolute; top: -10px; color: #fff; user-select: none; z-index: 10; font-size: 1.2em; animation: fall linear forwards; display: none; }
-        @keyframes fall { to { transform: translateY(110vh); } }
-
         .container { z-index: 10; text-align: center; width: 90%; max-width: 350px; display: flex; flex-direction: column; gap: 20px; }
         
-        /* UI ELEMENTS */
         .card { background: var(--card); padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 15px; transition: transform 0.2s; }
         select, button { width: 100%; padding: 12px; border-radius: 10px; border: none; font-size: 16px; outline: none; background: #334155; color: white; -webkit-appearance: none; text-align: center; }
         button { background: var(--primary); color: #0f172a; font-weight: bold; cursor: pointer; transition: transform 0.1s, background 0.2s; }
@@ -38,7 +34,7 @@
 
         input[type=range] { width: 100%; accent-color: var(--primary); height: 6px; border-radius: 3px; background: #334155; }
 
-        /* OISEAU (Bobby) */
+        /* OISEAU (Bobby) - Design original conservé */
         .scene { width: 200px; height: 160px; margin: 0 auto; position: relative; }
         .branch { position: absolute; bottom: 30px; left: 10px; width: 180px; height: 8px; background: var(--branch-brown); border-radius: 4px; transform: rotate(-5deg); }
         .bird { position: absolute; bottom: 36px; left: 60px; width: 80px; height: 70px; background: var(--bird-grey); border-radius: 50% 50% 40% 40%; box-shadow: inset -5px -5px 0 rgba(0,0,0,0.1); transition: transform 0.5s; }
@@ -50,7 +46,7 @@
         .eye { position: absolute; top: 8px; width: 10px; height: 10px; background: #000; border-radius: 50%; transition: all 0.3s; }
         .eye.left { left: 5px; } .eye.right { right: 5px; }
         
-        /* Paupières pour dormir */
+        /* Paupières */
         .eyelid { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bird-grey); top: -100%; transition: top 0.3s; }
         .is-sleeping .eye { height: 2px; top: 12px; border-radius: 0; }
         
@@ -118,15 +114,10 @@
     let isPlaying = false;
     let audioCtx;
     let masterGain;
-    let currentSource = null; // Stocke l'objet source actif (avec sa méthode stop propre)
+    let currentSource = null; // Stocke l'objet source actif
     
-    // Cache pour les buffers (évite de recalculer les bruits)
-    const bufferCache = {
-        white: null,
-        pink: null,
-        brown: null,
-        click: null // Pour pluie/feu
-    };
+    // Cache pour les buffers (évite de recalculer les bruits = économie batterie)
+    const bufferCache = { white: null, pink: null, brown: null, click: null };
 
     // Timer
     let countdownInterval;
@@ -155,28 +146,23 @@
         if (audioCtx.state === 'suspended') await audioCtx.resume();
     }
 
-    // Créateur de Bruit (Factory) - Optimisé CPU
+    // Créateur de Bruit (Factory)
     function createNoiseBuffer(type) {
         const bufferSize = 2 * audioCtx.sampleRate; // 2 secondes de boucle suffisent
         const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const output = buffer.getChannelData(0);
-        
         let lastOut = 0;
-        let b0=0, b1=0, b2=0, b3=0, b4=0, b5=0, b6=0; // Pour le bruit rose
+        let b0=0, b1=0, b2=0, b3=0, b4=0, b5=0, b6=0;
 
         for (let i = 0; i < bufferSize; i++) {
             const white = Math.random() * 2 - 1;
-            
-            if (type === 'white') {
-                output[i] = white;
-            } 
+            if (type === 'white') { output[i] = white; } 
             else if (type === 'brown') {
                 output[i] = (lastOut + (0.02 * white)) / 1.02;
                 lastOut = output[i];
                 output[i] *= 3.5; 
             } 
             else if (type === 'pink') {
-                // Algorithme de Paul Kellet (très efficace)
                 b0 = 0.99886 * b0 + white * 0.0555179;
                 b1 = 0.99332 * b1 + white * 0.0750759;
                 b2 = 0.96900 * b2 + white * 0.1538520;
@@ -190,7 +176,7 @@
         return buffer;
     }
 
-    // Petit buffer pour gouttes et craquements (évite 1000 créations/sec)
+    // Petit buffer pour gouttes et craquements (évite créations répétées)
     function createClickBuffer() {
         const buf = audioCtx.createBuffer(1, 0.02 * audioCtx.sampleRate, audioCtx.sampleRate);
         const d = buf.getChannelData(0);
@@ -198,7 +184,6 @@
         return buf;
     }
 
-    // Helper: Jouer un bruit en boucle
     function playLoop(type) {
         const src = audioCtx.createBufferSource();
         src.buffer = bufferCache[type];
@@ -206,21 +191,18 @@
         return src;
     }
 
-    // --- CONTROLE PRINCIPAL ---
+    // --- LOGIQUE PRINCIPALE ---
 
     async function startBobby() {
         const btn = document.getElementById('playBtn');
         const mode = document.getElementById('modeSelect').value;
         const bobby = document.getElementById('bobby');
 
-        // Init Audio Context
         await initAudio();
 
-        // Si déjà en train de jouer, on stop proprement avant de changer
         if (isPlaying) {
-            stopAudio(true); // true = petit fade out pour transition
-            // Petit délai pour laisser la transition se faire
-            setTimeout(() => launchMode(mode), 300);
+            stopAudio(true); 
+            setTimeout(() => launchMode(mode), 350);
         } else {
             launchMode(mode);
         }
@@ -230,16 +212,12 @@
         btn.textContent = "ARRÊTER";
         btn.classList.add('stop');
         
-        // Timer
         handleTimer();
-        
-        // Visuel Pluie
         toggleAnimation('rain', mode === 'rain' || mode === 'storm');
     }
 
     function launchMode(mode) {
         updateVolume(document.getElementById('volume').value);
-        
         switch (mode) {
             case 'rain': createRain(false); break;
             case 'storm': createRain(true); break;
@@ -253,7 +231,7 @@
     }
 
     function stopBobby() {
-        stopAudio(true); // Fade out
+        stopAudio(true); // Fade out doux
         isPlaying = false;
         
         const bobby = document.getElementById('bobby');
@@ -269,29 +247,22 @@
         document.getElementById('phraseDay').textContent = "Bobby est réveillé.";
     }
 
-    // --- FONCTIONS DE GESTION AUDIO ---
-
     function stopAudio(fade = false) {
         if (!currentSource) return;
-
-        const srcToStop = currentSource; // Copie locale pour la closure
+        const srcToStop = currentSource;
         currentSource = null;
 
         try {
             if (fade && masterGain) {
-                // Fade out sur le master pour éviter le "POP"
                 const now = audioCtx.currentTime;
                 masterGain.gain.cancelScheduledValues(now);
                 masterGain.gain.setValueAtTime(masterGain.gain.value, now);
                 masterGain.gain.linearRampToValueAtTime(0, now + 0.5);
-                
-                setTimeout(() => {
-                    if (srcToStop.stop) srcToStop.stop();
-                }, 550);
+                setTimeout(() => { if (srcToStop.stop) srcToStop.stop(); }, 550);
             } else {
                 if (srcToStop.stop) srcToStop.stop();
             }
-        } catch(e) { console.error("Stop error", e); }
+        } catch(e) { console.error(e); }
     }
 
     function updateVolume(val) {
@@ -301,9 +272,8 @@
         }
     }
 
-    // --- AMBIANCES (OPTIMISÉES) ---
+    // --- GENERATEURS DE SON (OPTIMISÉS) ---
 
-    // 1. SIMPLE NOISE (Pink, White)
     function createSimpleNoise(type) {
         const src = playLoop(type);
         src.connect(masterGain);
@@ -311,21 +281,17 @@
         currentSource = { stop: () => { src.stop(); src.disconnect(); } };
     }
 
-    // 2. VENT (Wind) - Filtre dynamique sur bruit blanc
     function createWind() {
         const src = playLoop('white');
         const filter = audioCtx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = 400;
-        
-        const gain = audioCtx.createGain(); // Gain local
+        filter.type = 'lowpass'; filter.frequency.value = 400;
+        const gain = audioCtx.createGain();
         src.connect(filter).connect(gain).connect(masterGain);
         src.start();
 
         let timer;
         const loop = () => {
             if (!isPlaying) return;
-            // Rafale
             const now = audioCtx.currentTime;
             const dur = 2 + Math.random() * 4;
             filter.frequency.exponentialRampToValueAtTime(600 + Math.random()*400, now + dur/2);
@@ -333,110 +299,61 @@
             timer = setTimeout(loop, dur * 1000);
         };
         loop();
-
-        currentSource = { 
-            stop: () => { 
-                clearTimeout(timer); 
-                src.stop(); src.disconnect(); filter.disconnect(); gain.disconnect();
-            } 
-        };
+        currentSource = { stop: () => { clearTimeout(timer); src.stop(); src.disconnect(); filter.disconnect(); gain.disconnect(); } };
     }
 
-    // 3. RIVIÈRE (River) - Bruit brun filtré stable
     function createRiver() {
         const src = playLoop('brown');
         const filter = audioCtx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = 600;
-        
-        // Stéréo léger
+        filter.type = 'lowpass'; filter.frequency.value = 600;
         const panner = audioCtx.createStereoPanner();
         panner.pan.value = 0.1;
-
         src.connect(filter).connect(panner).connect(masterGain);
         src.start();
-        
         currentSource = { stop: () => { src.stop(); src.disconnect(); filter.disconnect(); } };
     }
 
-    // 4. ESPACE (Space) - Deep Drone
     function createSpace() {
         const src = playLoop('brown');
         const filter = audioCtx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = 150; // Très bas
-        filter.Q.value = 2; // Résonance
-
+        filter.type = 'lowpass'; filter.frequency.value = 150; filter.Q.value = 2;
         const osc = audioCtx.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.value = 50; // Basse fréquence pure
-        const oscGain = audioCtx.createGain();
-        oscGain.gain.value = 0.1;
-
+        osc.type = 'sine'; osc.frequency.value = 50;
+        const oscGain = audioCtx.createGain(); oscGain.gain.value = 0.1;
         src.connect(filter).connect(masterGain);
         osc.connect(oscGain).connect(masterGain);
-        
-        src.start();
-        osc.start();
-
-        currentSource = { 
-            stop: () => { 
-                src.stop(); osc.stop();
-                src.disconnect(); filter.disconnect(); osc.disconnect();
-            } 
-        };
+        src.start(); osc.start();
+        currentSource = { stop: () => { src.stop(); osc.stop(); src.disconnect(); filter.disconnect(); osc.disconnect(); } };
     }
 
-    // 5. FEU (Fire) - Bruit Brun + Craquements aléatoires
     function createFire() {
         const rumble = playLoop('brown');
         const filter = audioCtx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = 500;
-        
-        const fireGain = audioCtx.createGain();
-        fireGain.gain.value = 0.8;
-        
+        filter.type = 'lowpass'; filter.frequency.value = 500;
+        const fireGain = audioCtx.createGain(); fireGain.gain.value = 0.8;
         rumble.connect(filter).connect(fireGain).connect(masterGain);
         rumble.start();
 
         let timer;
         const crackle = () => {
             if (!isPlaying) return;
-            // Joue un "clic" depuis le cache
             const src = audioCtx.createBufferSource();
             src.buffer = bufferCache.click;
-            
-            const g = audioCtx.createGain();
-            g.gain.value = 0.5 + Math.random() * 0.5;
-            
-            const f = audioCtx.createBiquadFilter();
-            f.type = 'highpass';
-            f.frequency.value = 1000;
-
+            const g = audioCtx.createGain(); g.gain.value = 0.5 + Math.random() * 0.5;
+            const f = audioCtx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 1000;
             src.connect(f).connect(g).connect(masterGain);
             src.start();
-            
             timer = setTimeout(crackle, 50 + Math.random() * 150);
         };
         crackle();
-
-        currentSource = { 
-            stop: () => { 
-                clearTimeout(timer);
-                rumble.stop(); rumble.disconnect(); filter.disconnect();
-            } 
-        };
+        currentSource = { stop: () => { clearTimeout(timer); rumble.stop(); rumble.disconnect(); filter.disconnect(); } };
     }
 
-    // 6. VAGUES (Waves) - Modulation de gain sur bruit rose
     function createWaves() {
         const src = playLoop('pink');
         const waveGain = audioCtx.createGain();
         const filter = audioCtx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = 500;
-
+        filter.type = 'lowpass'; filter.frequency.value = 500;
         src.connect(filter).connect(waveGain).connect(masterGain);
         src.start();
 
@@ -445,56 +362,36 @@
             if (!isPlaying) return;
             const now = audioCtx.currentTime;
             const dur = 4 + Math.random() * 4;
-            
-            // Le volume monte et descend
             waveGain.gain.exponentialRampToValueAtTime(0.8, now + dur/2);
             waveGain.gain.exponentialRampToValueAtTime(0.2, now + dur);
-            
-            // Le filtre s'ouvre et se ferme un peu
             filter.frequency.linearRampToValueAtTime(900, now + dur/2);
             filter.frequency.linearRampToValueAtTime(400, now + dur);
-
             timer = setTimeout(roll, dur * 1000);
         };
         roll();
-
-        currentSource = { 
-            stop: () => { 
-                clearTimeout(timer);
-                src.stop(); src.disconnect(); waveGain.disconnect();
-            } 
-        };
+        currentSource = { stop: () => { clearTimeout(timer); src.stop(); src.disconnect(); waveGain.disconnect(); } };
     }
 
-    // 7. PLUIE & ORAGE
     function createRain(isStorm) {
-        const bgNoise = playLoop('pink'); // Fond sonore
+        const bgNoise = playLoop('pink');
         const bgFilter = audioCtx.createBiquadFilter();
-        bgFilter.type = 'lowpass';
-        bgFilter.frequency.value = 800;
-        
-        const bgGain = audioCtx.createGain();
-        bgGain.gain.value = 0.4;
-
+        bgFilter.type = 'lowpass'; bgFilter.frequency.value = 800;
+        const bgGain = audioCtx.createGain(); bgGain.gain.value = 0.4;
         bgNoise.connect(bgFilter).connect(bgGain).connect(masterGain);
         bgNoise.start();
 
         let dropTimer, thunderTimer;
-
-        // Gouttes
         const dropLoop = () => {
             if (!isPlaying) return;
             const src = audioCtx.createBufferSource();
             src.buffer = bufferCache.click;
-            const g = audioCtx.createGain();
-            g.gain.value = 0.1 + Math.random() * 0.2;
+            const g = audioCtx.createGain(); g.gain.value = 0.1 + Math.random() * 0.2;
             src.connect(g).connect(masterGain);
             src.start();
             dropTimer = setTimeout(dropLoop, 20 + Math.random()*50);
         };
         dropLoop();
 
-        // Orage
         if (isStorm) {
             const thunderLoop = () => {
                 if (!isPlaying) return;
@@ -503,37 +400,25 @@
             };
             setTimeout(thunderLoop, 2000);
         }
-
-        currentSource = {
-            stop: () => {
-                clearTimeout(dropTimer);
-                clearTimeout(thunderTimer);
-                bgNoise.stop(); bgNoise.disconnect();
-            }
-        };
+        currentSource = { stop: () => { clearTimeout(dropTimer); clearTimeout(thunderTimer); bgNoise.stop(); bgNoise.disconnect(); } };
     }
 
     function triggerThunder() {
         const dur = 1.5;
-        const src = playLoop('brown'); // Utilise bruit brun existant
+        const src = playLoop('brown');
         const g = audioCtx.createGain();
         const f = audioCtx.createBiquadFilter();
-        f.type = 'lowpass';
-        f.frequency.value = 200;
-
+        f.type = 'lowpass'; f.frequency.value = 200;
         src.connect(f).connect(g).connect(masterGain);
-        
         const now = audioCtx.currentTime;
         g.gain.setValueAtTime(0, now);
-        g.gain.linearRampToValueAtTime(1, now + 0.1); // Attack
-        g.gain.exponentialRampToValueAtTime(0.01, now + dur); // Decay
-
+        g.gain.linearRampToValueAtTime(1, now + 0.1);
+        g.gain.exponentialRampToValueAtTime(0.01, now + dur);
         src.start();
         src.stop(now + dur + 0.5);
     }
 
-
-    // --- UI HELPERS ---
+    // --- ANIMATION & HELPERS ---
 
     function toggleAnimation(type, isActive) {
         if (type === 'rain') {
@@ -547,10 +432,9 @@
         document.getElementById('phraseDay').textContent = phrases[r];
     }
 
-    // Timer Logic
     function handleTimer() {
         clearInterval(countdownInterval);
-        resetTimerUI(); // Remettre le texte original avant de commencer
+        resetTimerUI(); 
 
         const s = document.getElementById('timerSelect');
         const selectedOption = s.options[s.selectedIndex]; 
@@ -561,30 +445,25 @@
             timeLeft = mins * 60;
             countdownInterval = setInterval(() => {
                 timeLeft--;
-                if (timeLeft <= 0) {
-                    stopBobby();
-                } else {
+                if (timeLeft <= 0) { stopBobby(); } 
+                else {
                     let m = Math.floor(timeLeft / 60);
                     let sec = timeLeft % 60;
                     selectedOption.text = `${m}:${sec < 10 ? '0' : ''}${sec}`;
                 }
             }, 1000);
-            
-            // Hook pour restaurer le texte quand on stop manuellement
             s.dataset.originalText = originalText; 
         }
     }
 
     function resetTimerUI() {
         const s = document.getElementById('timerSelect');
-        // Restaurer les textes des options (si modifiés par le compte à rebours)
         s.options[1].text = "15 Minutes";
         s.options[2].text = "30 Minutes";
         s.options[3].text = "1 Heure";
         s.options[4].text = "2 Heures";
     }
 
-    // Listeners
     document.getElementById('timerSelect').addEventListener('change', () => { if (isPlaying) startBobby(); });
     document.getElementById('playBtn').addEventListener('click', () => isPlaying ? stopBobby() : startBobby());
     document.getElementById('modeSelect').addEventListener('change', () => isPlaying && startBobby());
@@ -599,7 +478,6 @@
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').catch(() => { });
     }
-
 </script>
 </body>
 </html>
