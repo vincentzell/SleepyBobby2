@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sleepy-bobby-v5';
+const CACHE_NAME = 'sleepy-bobby-v8';
 
 const ASSETS = [
   './',
@@ -23,9 +23,16 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(ASSETS))
-      .catch((err) => console.error(err))
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('[SW] Ouverture du cache...');
+      return Promise.all(
+        ASSETS.map(url => {
+          return cache.add(url).catch(err => {
+            console.error('[SW] ERREUR chargement fichier :', url, err);
+          });
+        })
+      );
+    })
   );
 });
 
@@ -33,7 +40,10 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys.filter((key) => key !== CACHE_NAME).map((key) => {
+            console.log('[SW] Suppression vieux cache :', key);
+            return caches.delete(key);
+        })
       );
     })
   );
@@ -42,9 +52,28 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (!event.request.url.startsWith(self.location.origin)) return;
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      return cachedResponse || fetch(event.request);
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      return fetch(event.request).then((networkResponse) => {
+        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+          return networkResponse;
+        }
+        
+        const responseToCache = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+          console.log('[SW] Mise en cache dynamique :', event.request.url);
+        });
+
+        return networkResponse;
+      }).catch(err => {
+        console.error('[SW] Erreur Fetch :', err);
+      });
     })
   );
 });
