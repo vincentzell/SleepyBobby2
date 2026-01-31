@@ -169,18 +169,10 @@
             </div>
         </div>
     </div>
-
- <script>
- // --- VARIABLES GLOBALES ---
-let visualInterval, countdownInterval, fxInterval;
-let isPlaying = false;
-let audioCtx, masterGain, currentSource;
-let audioBuffers = {}; 
-let endTime = 0;
-
-// NOUVEAU : Le "leurre" pour activer les notifications
-const silentAudio = new Audio("data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD//////////////////////////////////////////////////////////////////wAAADFMYXZjNTguNTQAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA");
-silentAudio.loop = true;
+<audio id="silentPlayer" loop style="display:none;">
+        <source src="data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD//////////////////////////////////////////////////////////////////wAAADFMYXZjNTguNTQAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA" type="audio/mpeg">
+    </audio>
+<script>
     // --- CONFIGURATION ---
     const phrases = [
         "Bobby ébouriffe ses plumes pour te border.", "Chut... Bobby troque son chant contre un doux murmure.",
@@ -197,24 +189,24 @@ silentAudio.loop = true;
     let isPlaying = false;
     let audioCtx, masterGain, currentSource;
     let audioBuffers = {}; 
-    let endTime = 0; // Pour le minuteur précis
+    let endTime = 0;
 
-    // FICHIERS AUDIO (Assurez-vous que ces fichiers existent dans le dossier 'res/')
+    // FICHIERS AUDIO
     const SOUND_FILES = {
         stream: 'res/813251__nicktayloe__cave-stream-loop.wav', 
         river: 'res/443869__eardeer__water_flow_dam_distant_loop.wav', 
         pink: 'res/349312__newagesoup__pink_noise-10s.wav', 
         waves: 'res/829626__nox_sound__ambiance_ocean_praia_dos_moinhos_loop_stereo_01(1).wav',
         rain: 'res/66472__digifishmusic__rain_on_a_tin_roof_loop.wav',
-        storm: 'res/66472__digifishmusic__rain_on_a_tin_roof_loop.wav', // Base de pluie
+        storm: 'res/66472__digifishmusic__rain_on_a_tin_roof_loop.wav', 
         wind: 'res/651545__nsstudios__wind-draft-loop-3.wav', 
-        fire: 'res/612277__robinhood76__10835-big-fire-loop.wav', // NOM DE FICHIER À CRÉER OU REMPLACER
+        fire: 'res/612277__robinhood76__10835-big-fire-loop.wav', 
         space: 'res/676854__darrenpasemko__wind_looping_01.wav'
     };
 
     const FX_FILES = {
-        thunder: 'res/778363__blondpanda__distant_rumbling_thunder_in_rain_02.wav', // À REMPLACER
-        crackle: 'res/823274__hannagreen__sparks_mediumdensity3.wav'  // À REMPLACER
+        thunder: 'res/778363__blondpanda__distant_rumbling_thunder_in_rain_02.wav',
+        crackle: 'res/823274__hannagreen__sparks_mediumdensity3.wav' 
     };
 
     // --- FONCTIONS UI ---
@@ -243,7 +235,7 @@ silentAudio.loop = true;
         
         const phraseBox = document.getElementById('bobbyPhrase');
         const originalText = phraseBox.textContent;
-        phraseBox.textContent = "Chargement des sons...";
+        phraseBox.textContent = "Chargement...";
 
         try {
             const response = await fetch(url);
@@ -254,9 +246,9 @@ silentAudio.loop = true;
             phraseBox.textContent = originalText;
             return decodedData;
         } catch (e) {
-            console.error("Erreur chargement audio:", e);
-            phraseBox.textContent = "Erreur: Fichier audio manquant !";
-            setTimeout(() => phraseBox.textContent = originalText, 3000);
+            console.error(e);
+            phraseBox.textContent = "Erreur audio !";
+            setTimeout(() => phraseBox.textContent = originalText, 2000);
             return null;
         }
     }
@@ -269,7 +261,7 @@ silentAudio.loop = true;
         const source = audioCtx.createBufferSource();
         source.buffer = buffer;
         const fxGain = audioCtx.createGain();
-        fxGain.gain.value = 0.6; // FX un peu moins fort
+        fxGain.gain.value = 0.6; 
         source.connect(fxGain);
         fxGain.connect(masterGain);
         source.start(0);
@@ -277,7 +269,7 @@ silentAudio.loop = true;
 
     async function startAudio(mode) {
         await initAudio();
-        stopAudio(false); // false = ne pas tout couper, juste le son précédent
+        stopAudio(false); 
 
         const loopUrl = SOUND_FILES[mode];
         if (!loopUrl) return;
@@ -289,7 +281,6 @@ silentAudio.loop = true;
         source.buffer = buffer;
         source.loop = true; 
         
-        // Fade In
         const v = document.getElementById('volume').value;
         masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
         masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
@@ -299,11 +290,8 @@ silentAudio.loop = true;
         source.start(0);
         currentSource = source;
 
-        // Lancer les boucles FX
         if (mode === 'storm') fxLoop('thunder', 8000, 20000);
         else if (mode === 'fire') fxLoop('crackle', 3000, 10000);
-        
-        updateMediaSession(mode);
     }
 
     function fxLoop(fxName, minTime, maxTime) {
@@ -319,14 +307,11 @@ silentAudio.loop = true;
     function stopAudio(fullStop = true) {
         if (currentSource) {
             try {
-                // Fade Out
                 masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
                 masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
                 masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
                 const oldSource = currentSource;
-                setTimeout(() => { 
-                    try { oldSource.stop(); oldSource.disconnect(); } catch(e){} 
-                }, 600);
+                setTimeout(() => { try { oldSource.stop(); oldSource.disconnect(); } catch(e){} }, 600);
             } catch (e) {}
             currentSource = null;
         }
@@ -344,8 +329,8 @@ silentAudio.loop = true;
         }
     }
 
-    // --- MEDIA SESSION API (CONTROLES ECRAN DE VERROUILLAGE) ---
-function updateMediaSession(modeKey) {
+    // --- MEDIA SESSION & START ---
+    function updateMediaSession(modeKey) {
         if ('mediaSession' in navigator) {
             const modeNames = {
                 stream: "Ruisseau", river: "Rivière", pink: "Bruit Rose",
@@ -357,33 +342,78 @@ function updateMediaSession(modeKey) {
                 title: 'Sleepy Bobby',
                 artist: modeNames[modeKey] || 'Relaxation',
                 album: 'Ambiance Naturelle',
-                artwork: [
-                    { src: 'icon.png', sizes: '192x192', type: 'image/png' },
-                    { src: 'icon.png', sizes: '512x512', type: 'image/png' }
-                ]
+                artwork: [{ src: 'icon.png', sizes: '512x512', type: 'image/png' }]
             });
 
-            // Ces 4 actions sont obligatoires pour Android/iOS
             navigator.mediaSession.setActionHandler('play', startBobby);
             navigator.mediaSession.setActionHandler('pause', stopBobby);
             navigator.mediaSession.setActionHandler('stop', stopBobby);
-            
-            // Permet de passer au son suivant/précédent (optionnel mais sympa)
-            navigator.mediaSession.setActionHandler('previoustrack', () => changeMode(-1));
-            navigator.mediaSession.setActionHandler('nexttrack', () => changeMode(1));
-
             navigator.mediaSession.playbackState = "playing";
         }
     }
 
-    // Petite fonction utilitaire pour changer de son depuis l'écran de verrouillage
-    function changeMode(direction) {
-        const sel = document.getElementById('modeSelect');
-        let newIndex = sel.selectedIndex + direction;
-        if (newIndex < 0) newIndex = sel.options.length - 1;
-        if (newIndex >= sel.options.length) newIndex = 0;
-        sel.selectedIndex = newIndex;
-        startBobby();
+    async function startBobby() {
+        if(isPlaying) {
+            stopBobby();
+            return;
+        }
+
+        // 1. ACTIVER LE LECTEUR SILENCIEUX HTML (PRIORITAIRE)
+        const silentPlayer = document.getElementById('silentPlayer');
+        try {
+            await silentPlayer.play();
+        } catch(e) { console.log("Silent play prevented"); }
+
+        // 2. DÉCLARER LA SESSION IMMÉDIATEMENT (Pour éviter la notif "URL")
+        const mode = document.getElementById('modeSelect').value;
+        updateMediaSession(mode);
+
+        isPlaying = true;
+        displayNewPhrase();
+        document.getElementById('playBtn').innerHTML = ""; 
+        document.getElementById('bobbyBox').classList.add('playing');
+        
+        // 3. CHARGER LES VRAIS SONS APRÈS
+        await startAudio(mode);
+        updateVisuals();
+
+        // Minuteur
+        const s = document.getElementById('timerSelect');
+        const selectedOption = s.options[s.selectedIndex];
+        let mins = parseInt(s.value);
+        if (mins > 0) {
+            endTime = Date.now() + (mins * 60 * 1000);
+            countdownInterval = setInterval(() => {
+                const now = Date.now();
+                const diff = Math.ceil((endTime - now) / 1000);
+                if (diff <= 0) stopBobby();
+                else {
+                    let m = Math.floor(diff / 60);
+                    let sec = diff % 60;
+                    selectedOption.text = `${m}:${sec < 10 ? '0' : ''}${sec} restant`;
+                }
+            }, 1000);
+        }
+    }
+
+    function stopBobby() {
+        isPlaying = false;
+        
+        // On coupe le lecteur silencieux
+        const silentPlayer = document.getElementById('silentPlayer');
+        silentPlayer.pause();
+        silentPlayer.currentTime = 0;
+
+        stopAudio(true);
+        document.getElementById('bobbyBox').classList.remove('playing', 'sway-active');
+        clearInterval(visualInterval);
+        clearInterval(countdownInterval);
+        
+        document.getElementById('animContainer').innerHTML = '';
+        document.getElementById('bgAnimContainer').innerHTML = '';
+        document.getElementById('birdMain').style.boxShadow = "none";
+        document.getElementById('bChest').style.filter = "none";
+        resetTimerLabels();
     }
 
     // --- VISUEL ET LOGIQUE ---
@@ -391,10 +421,6 @@ function updateMediaSession(modeKey) {
         const f = document.getElementById('animContainer'), b = document.getElementById('bgAnimContainer'), m = document.getElementById('modeSelect').value;
         f.innerHTML = ''; b.innerHTML = ''; clearInterval(visualInterval);
 
-        // (Votre logique visuelle originale conservée ici pour la concision)
-        // ... Insérer ici le bloc switch/if des visuels si besoin de modifications
-        // Pour l'instant, je réutilise les classes CSS définies.
-        
         if (m === 'rain' || m === 'storm') {
             for(let i=0;i<40;i++) { let d=document.createElement('div');d.className='rain-drop';d.style.left=Math.random()*100+'%';d.style.animationDelay=Math.random()*2+'s';f.appendChild(d); }
         } else if (m === 'space') {
@@ -420,74 +446,9 @@ function updateMediaSession(modeKey) {
         else document.getElementById('bobbyBox').classList.remove('sway-active');
     }
 
-async function startBobby() {
-        if(isPlaying) stopBobby(); 
-        
-        // 1. On lance le leurre silencieux pour forcer la notification
-        try {
-            await silentAudio.play();
-        } catch (e) {
-            console.warn("Autoplay bloqué (interaction requise)", e);
-        }
-
-        isPlaying = true;
-        displayNewPhrase();
-        document.getElementById('playBtn').innerHTML = ""; 
-        document.getElementById('bobbyBox').classList.add('playing');
-        
-        // 2. On lance le moteur audio
-        const mode = document.getElementById('modeSelect').value;
-        await startAudio(mode);
-        updateVisuals();
-
-        // 3. IMPORTANT : On met à jour la notification APRÈS avoir lancé l'audio
-        updateMediaSession(mode);
-
-        // GESTION MINUTEUR PRÉCISE
-        const s = document.getElementById('timerSelect');
-        const selectedOption = s.options[s.selectedIndex];
-        let mins = parseInt(s.value);
-
-        if (mins > 0) {
-            endTime = Date.now() + (mins * 60 * 1000);
-            
-            countdownInterval = setInterval(() => {
-                const now = Date.now();
-                const diff = Math.ceil((endTime - now) / 1000);
-                
-                if (diff <= 0) {
-                    stopBobby();
-                } else {
-                    let m = Math.floor(diff / 60);
-                    let sec = diff % 60;
-                    selectedOption.text = `${m}:${sec < 10 ? '0' : ''}${sec} restant`;
-                }
-            }, 1000);
-        }
-    }
-
-function stopBobby() {
-        isPlaying = false;
-        
-        // On coupe le leurre
-        silentAudio.pause();
-        silentAudio.currentTime = 0; // Remise à zéro
-
-        stopAudio(true);
-        document.getElementById('bobbyBox').classList.remove('playing', 'sway-active');
-        clearInterval(visualInterval);
-        clearInterval(countdownInterval);
-        
-        document.getElementById('animContainer').innerHTML = '';
-        document.getElementById('bgAnimContainer').innerHTML = '';
-        document.getElementById('birdMain').style.boxShadow = "none";
-        document.getElementById('bChest').style.filter = "none";
-        resetTimerLabels();
-    }
-
     // EVENT LISTENERS
     document.getElementById('timerSelect').addEventListener('change', () => { if (isPlaying) startBobby(); });
-    document.getElementById('playBtn').addEventListener('click', () => isPlaying ? stopBobby() : startBobby());
+    document.getElementById('playBtn').addEventListener('click', () => startBobby());
     document.getElementById('modeSelect').addEventListener('change', () => isPlaying && startBobby());
     document.getElementById('volume').addEventListener('input', (e) => {
         document.getElementById('volPerc').textContent = Math.round(e.target.value * 100) + "%";
