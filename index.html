@@ -183,16 +183,18 @@
 
     // CONFIGURATION DES FICHIERS AUDIO
     // Assure-toi que les fichiers existent dans le dossier "res" (ou "sounds")
+const placeholder = 'res/416529__inspectorj__bird-whistling-single-robin-a.wav';
+
     const SOUND_FILES = {
-        stream: 'res/813251__nicktayloe__cave-stream-loop.wav', // Ton fichier WAV
-        river: null, 
-        pink: null, 
-        waves: null,
-        rain: null, 
-        storm: null, 
-        wind: null, 
-        fire: null, 
-        space: null
+        stream: 'res/813251__nicktayloe__cave-stream-loop.wav', // Le seul vrai son pour l'instant
+        river: 'res/443869__eardeer__water_flow_dam_distant_loop.wav', 
+        pink: placeholder, 
+        waves: placeholder,
+        rain: placeholder, 
+        storm: placeholder, 
+        wind: placeholder, 
+        fire: placeholder, 
+        space: placeholder
     };
 
     async function initAudio() {
