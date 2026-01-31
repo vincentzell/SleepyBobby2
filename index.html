@@ -28,20 +28,15 @@
 
         #riverParallaxContainer {
             position: absolute; inset: 0; pointer-events: none; overflow: hidden;
-            z-index: 0; 
-            display: none; 
-            opacity: 0; transition: opacity 2s ease-in-out; 
+            z-index: 0; display: none; opacity: 0; transition: opacity 2s ease-in-out; 
         }
         #riverParallaxContainer.active { display: block; opacity: 1; }
-
-        #riverParallaxContainer::after { display: none; }
 
         .river-layer {
             position: absolute; bottom: 0; left: 0; width: 200%; 
             background-repeat: repeat-x; background-position: bottom left; background-size: 50% 100%;
             animation: parallaxMove linear infinite;
         }
-
         .layer-1 { bottom: 0; height: 35vh; opacity: 0.4; animation-duration: 70s; z-index: 1; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,20 C300,25 600,15 900,22 1200,20 L1200,120 L0,120 Z' fill='%230a0f1d'/%3E%3C/svg%3E"); }
         .layer-2 { bottom: -1vh; height: 33vh; opacity: 0.45; animation-duration: 60s; z-index: 2; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,22 C250,32 550,12 850,28 1200,22 L1200,120 L0,120 Z' fill='%230e1525'/%3E%3C/svg%3E"); }
         .layer-3 { bottom: -2vh; height: 31vh; opacity: 0.5; animation-duration: 50s; z-index: 3; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,25 C400,15 800,35 1200,25 L1200,120 L0,120 Z' fill='%23131c31'/%3E%3C/svg%3E"); }
@@ -69,9 +64,7 @@
             5% { background-color: #334155; border-color: rgba(255,255,255,0.4); box-shadow: 0 20px 60px rgba(100,116,139,0.3); } 
             100% { background-color: var(--card); border-color: rgba(255,255,255,0.05); }
         }
-        .lightning-active {
-            animation: flashEffect 1.5s ease-out; 
-        }
+        .lightning-active { animation: flashEffect 1.5s ease-out; }
 
         .play-btn-wrapper { position: relative; margin: 10px auto 30px; width: 160px; height: 160px; display: flex; justify-content: center; }
         .bobby-box { position: relative; width: 140px; height: 150px; transform-origin: center 85%; transition: transform 0.5s ease; }
@@ -261,16 +254,12 @@
         </div>
     </div>
 
-    <audio id="silentPlayer" loop style="opacity:0; position:fixed; bottom:0; pointer-events:none;">
-        <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA" type="audio/wav">
-    </audio>
+    <audio id="mainAudio" loop crossorigin="anonymous"></audio>
 
 <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then((reg) => console.log('Service Worker enregistré:', reg))
-          .catch((err) => console.error('Erreur Service Worker:', err));
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
       });
     }
 
@@ -286,10 +275,12 @@
 
     let visualInterval, countdownInterval, fxInterval;
     let isPlaying = false;
-    let audioCtx, masterGain, currentSource;
-    let audioBuffers = {}; 
+    let audioCtx, masterGain; // Pour les bruitages (tonnerre, feu) seulement
+    let fxBuffers = {}; 
     let endTime = 0;
-    let wakeLock = null; // Pour empêcher le téléphone de s'endormir
+    let wakeLock = null;
+
+    const mainAudioPlayer = document.getElementById('mainAudio');
 
     const SOUND_FILES = {
         stream: 'res/813251__nicktayloe__cave-stream-loop.wav', 
@@ -319,57 +310,46 @@
 
     async function requestWakeLock() {
         if ('wakeLock' in navigator) {
-            try {
-                wakeLock = await navigator.wakeLock.request('screen');
-                console.log('Wake Lock actif');
-            } catch (err) {
-                console.error(`${err.name}, ${err.message}`);
-            }
+            try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
         }
     }
 
-    async function initAudio() {
+    // Initialisation Audio pour les bruitages (SFX) uniquement
+    async function initAudioContext() {
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             masterGain = audioCtx.createGain();
             masterGain.connect(audioCtx.destination);
-            updateVolume(document.getElementById('volume').value);
+            // On sync le volume
+            masterGain.gain.value = document.getElementById('volume').value;
         }
         if (audioCtx.state === 'suspended') await audioCtx.resume();
     }
 
-    async function getAudioBuffer(url) {
-        if (audioBuffers[url]) return audioBuffers[url];
-        
-        const phraseBox = document.getElementById('bobbyPhrase');
-        const originalText = phraseBox.textContent;
-        phraseBox.textContent = "Chargement...";
-
+    // Chargement Buffer pour les SFX courts uniquement
+    async function getFxBuffer(url) {
+        if (fxBuffers[url]) return fxBuffers[url];
         try {
             const response = await fetch(url);
-            if (!response.ok) throw new Error(`Fichier introuvable (${response.status})`);
-            const contentType = response.headers.get("content-type");
-            if (contentType && contentType.includes("text/html")) throw new Error("Erreur 404 (Fichier non trouvé)");
             const arrayBuffer = await response.arrayBuffer();
             const decodedData = await audioCtx.decodeAudioData(arrayBuffer);
-            audioBuffers[url] = decodedData;
-            phraseBox.textContent = originalText;
+            fxBuffers[url] = decodedData;
             return decodedData;
-        } catch (e) {
-            console.error("ERREUR CRITIQUE:", e);
-            phraseBox.innerHTML = `<span style="color:#fb7185; font-size:0.8em">Erreur: ${url} introuvable !</span>`;
-            return null;
-        }
+        } catch (e) { return null; }
     }
 
+    // Jouer un SFX (Tonnerre/Feu) via WebAudio
     async function playOneShot(key) {
         if (!isPlaying) return;
-        const buffer = await getAudioBuffer(FX_FILES[key]);
+        await initAudioContext();
+        
+        const buffer = await getFxBuffer(FX_FILES[key]);
         if (!buffer) return;
+        
         const source = audioCtx.createBufferSource();
         source.buffer = buffer;
         const fxGain = audioCtx.createGain();
-        fxGain.gain.value = key === 'thunder' ? 2.5 : 0.6; 
+        fxGain.gain.value = key === 'thunder' ? 2.0 : 0.8; 
         source.connect(fxGain);
         fxGain.connect(masterGain);
         source.start(0);
@@ -382,33 +362,7 @@
         }
     }
 
-    async function startAudio(mode) {
-        await initAudio();
-        stopAudio(false); 
-
-        const loopUrl = SOUND_FILES[mode];
-        if (!loopUrl) return;
-
-        const buffer = await getAudioBuffer(loopUrl);
-        if (!buffer) return;
-
-        const source = audioCtx.createBufferSource();
-        source.buffer = buffer;
-        source.loop = true; 
-        
-        const v = document.getElementById('volume').value;
-        masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
-        masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
-        masterGain.gain.linearRampToValueAtTime(parseFloat(v), audioCtx.currentTime + 1.5);
-
-        source.connect(masterGain);
-        source.start(0);
-        currentSource = source;
-
-        if (mode === 'storm') fxLoop('thunder', 8000, 20000);
-        else if (mode === 'fire') fxLoop('crackle', 3000, 10000);
-    }
-
+    // Gestion de la boucle des SFX
     function fxLoop(fxName, minTime, maxTime) {
         const delay = minTime + Math.random() * (maxTime - minTime);
         fxInterval = setTimeout(() => {
@@ -419,26 +373,49 @@
         }, delay);
     }
 
-    function stopAudio(fullStop = true) {
-        if (currentSource) {
+    // Démarrage Audio Principal (Balise Audio HTML5)
+    async function startAudio(mode) {
+        // 1. Arrêter les anciens sons
+        stopAudio(false);
+        
+        // 2. Initialiser le contexte pour les SFX potentiels
+        await initAudioContext();
+
+        // 3. Lancer le son principal via balise <audio> (Stream natif)
+        const url = SOUND_FILES[mode];
+        if (url) {
+            mainAudioPlayer.src = url;
+            mainAudioPlayer.volume = document.getElementById('volume').value;
             try {
-                masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
-                masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
-                masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
-                const oldSource = currentSource;
-                setTimeout(() => { try { oldSource.stop(); oldSource.disconnect(); } catch(e){} }, 600);
-            } catch (e) {}
-            currentSource = null;
+                await mainAudioPlayer.play();
+            } catch (e) {
+                console.error("Autoplay bloqué ou erreur", e);
+            }
         }
+
+        // 4. Lancer les boucles SFX si besoin
+        if (mode === 'storm') fxLoop('thunder', 8000, 20000);
+        else if (mode === 'fire') fxLoop('crackle', 3000, 10000);
+    }
+
+    function stopAudio(fullStop = true) {
+        // Stop Main Player
+        mainAudioPlayer.pause();
+        // Ne pas remettre à 0 si on change juste de piste pour fluidité, mais ici on pause
+        
+        // Stop SFX Loop
         if (fxInterval) clearTimeout(fxInterval);
+
         if (fullStop && 'mediaSession' in navigator) {
             navigator.mediaSession.playbackState = "none";
         }
     }
 
     function updateVolume(val) {
+        // Volume Lecteur Principal
+        mainAudioPlayer.volume = val;
+        // Volume SFX
         if (masterGain) {
-            masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
             masterGain.gain.setTargetAtTime(val, audioCtx.currentTime, 0.1);
         }
     }
@@ -469,14 +446,6 @@
             return;
         }
         
-        // 1. Démarrage du lecteur silencieux pour leurrer Android
-        const silentPlayer = document.getElementById('silentPlayer');
-        try {
-            silentPlayer.volume = 1.0; 
-            await silentPlayer.play();
-        } catch(e) { console.error("Erreur silent player", e); }
-
-        // 2. Activation du Wake Lock pour garder le CPU actif
         await requestWakeLock();
 
         isPlaying = true;
@@ -518,14 +487,7 @@
     function stopBobby() {
         isPlaying = false;
         
-        const silentPlayer = document.getElementById('silentPlayer');
-        silentPlayer.pause();
-        silentPlayer.currentTime = 0;
-
-        // Libération du Wake Lock
-        if (wakeLock !== null) {
-            wakeLock.release().then(() => { wakeLock = null; });
-        }
+        if (wakeLock !== null) { wakeLock.release().then(() => { wakeLock = null; }); }
 
         stopAudio(true);
         if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
@@ -658,17 +620,12 @@
         }
     }
 
-    // Gestion du retour au premier plan pour reconnecter l'audio si Android l'a suspendu
     document.addEventListener("visibilitychange", async () => {
-        if (!document.hidden && isPlaying && audioCtx && audioCtx.state === 'suspended') {
-            await audioCtx.resume();
-            // On relance le silent player pour être sûr
-            const silentPlayer = document.getElementById('silentPlayer');
-            if (silentPlayer.paused) silentPlayer.play().catch(e=>console.log(e));
-        }
-        // Récupérer le WakeLock s'il a été perdu (souvent le cas en changeant d'app)
-        if (!document.hidden && isPlaying && wakeLock === null) {
-            await requestWakeLock();
+        if (!document.hidden && isPlaying) {
+            if (audioCtx && audioCtx.state === 'suspended') await audioCtx.resume();
+            if (wakeLock === null) await requestWakeLock();
+            // Le lecteur audio natif reprend tout seul s'il n'a pas été tué, sinon on le relance
+            if (mainAudioPlayer.paused) mainAudioPlayer.play();
         }
     });
 
