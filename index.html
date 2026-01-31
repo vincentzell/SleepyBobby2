@@ -21,10 +21,63 @@
         #bgAnimContainer { z-index: 1; } 
         #animContainer { z-index: 999; }
 
-        .container { width: 100%; max-width: 380px; padding: 20px; text-align: center; position: relative; z-index: 10; }
-        .card { background: var(--card); padding: 2rem; border-radius: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(10px); }
+        #riverParallaxContainer {
+            position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+            z-index: 0; 
+            display: none; 
+            opacity: 0; transition: opacity 2s ease-in-out; 
+        }
+        #riverParallaxContainer.active { display: block; opacity: 1; }
 
-        /* --- BOBBY --- */
+        #riverParallaxContainer::after {
+            content: ''; position: absolute; top: 30%; left: 12%;
+            width: 10%; height: 60%;
+            background: linear-gradient(to bottom, transparent, rgba(255, 255, 240, 0.5) 30%, rgba(255, 255, 240, 0.1) 80%, transparent);
+            filter: blur(12px);
+            mix-blend-mode: color-dodge;
+            z-index: 20;
+            pointer-events: none;
+            transform: skewX(-5deg);
+        }
+
+        .river-layer {
+            position: absolute; bottom: 0; left: 0; width: 200%; 
+            background-repeat: repeat-x; background-position: bottom left; background-size: 50% 100%;
+            animation: parallaxMove linear infinite;
+        }
+
+        .layer-1 { bottom: 0; height: 56vh; opacity: 0.4; animation-duration: 70s; z-index: 1; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,20 C300,25 600,15 900,22 1200,20 L1200,120 L0,120 Z' fill='%230a0f1d'/%3E%3C/svg%3E"); }
+        .layer-2 { bottom: -1vh; height: 54vh; opacity: 0.45; animation-duration: 60s; z-index: 2; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,22 C250,32 550,12 850,28 1200,22 L1200,120 L0,120 Z' fill='%230e1525'/%3E%3C/svg%3E"); }
+        .layer-3 { bottom: -2vh; height: 52vh; opacity: 0.5; animation-duration: 50s; z-index: 3; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,25 C400,15 800,35 1200,25 L1200,120 L0,120 Z' fill='%23131c31'/%3E%3C/svg%3E"); }
+        .layer-4 { bottom: -3vh; height: 50vh; opacity: 0.55; animation-duration: 42s; z-index: 4; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,28 C350,38 700,18 1050,32 1200,28 L1200,120 L0,120 Z' fill='%2317223b'/%3E%3C/svg%3E"); }
+        .layer-5 { bottom: -4vh; height: 48vh; opacity: 0.6; animation-duration: 35s; z-index: 5; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,30 C200,40 500,20 1200,30 L1200,120 L0,120 Z' fill='%231c2945'/%3E%3C/svg%3E"); }
+        .layer-6 { bottom: -5vh; height: 46vh; opacity: 0.65; animation-duration: 28s; z-index: 6; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,20 C300,25 600,15 900,22 1200,20 L1200,120 L0,120 Z' fill='%23223152'/%3E%3C/svg%3E"); }
+        .layer-7 { bottom: -6vh; height: 44vh; opacity: 0.7; animation-duration: 22s; z-index: 7; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,22 C250,32 550,12 850,28 1200,22 L1200,120 L0,120 Z' fill='%232a3d61'/%3E%3C/svg%3E"); }
+        .layer-8 { bottom: -7vh; height: 42vh; opacity: 0.75; animation-duration: 16s; z-index: 8; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,25 C400,15 800,35 1200,25 L1200,120 L0,120 Z' fill='%23334a73'/%3E%3C/svg%3E"); }
+        .layer-9 { bottom: -8vh; height: 40vh; opacity: 0.7; animation-duration: 12s; z-index: 9; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,28 C350,38 700,18 1050,32 1200,28 L1200,120 L0,120 Z' fill='%23283a5e'/%3E%3C/svg%3E"); }
+        
+        .layer-10 { bottom: -9vh; height: 38vh; opacity: 1; animation: none; z-index: 10; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,30 C200,40 500,20 1200,30 L1200,120 L0,120 Z' fill='%230f172a'/%3E%3C/svg%3E"); }
+
+        @keyframes parallaxMove { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+        .container { width: 100%; max-width: 380px; padding: 20px; text-align: center; position: relative; z-index: 10; }
+        .card { 
+            background: var(--card); padding: 2rem; border-radius: 40px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
+            border: 1px solid rgba(255,255,255,0.05); 
+            backdrop-filter: blur(10px); 
+            transition: background-color 0.3s;
+        }
+
+        @keyframes flashEffect {
+            0% { background-color: var(--card); border-color: rgba(255,255,255,0.05); }
+            5% { background-color: #334155; border-color: rgba(255,255,255,0.4); box-shadow: 0 20px 60px rgba(100,116,139,0.3); } 
+            100% { background-color: var(--card); border-color: rgba(255,255,255,0.05); }
+        }
+        .lightning-active {
+            animation: flashEffect 1.5s ease-out; 
+        }
+
         .play-btn-wrapper { position: relative; margin: 10px auto 30px; width: 160px; height: 160px; display: flex; justify-content: center; }
         .bobby-box { position: relative; width: 140px; height: 150px; transform-origin: center 85%; transition: transform 0.5s ease; }
         .bird-body { width: 90px; height: 100px; background: var(--bird-grey); border-radius: 50% 50% 45% 45%; position: absolute; left: 25px; top: 10px; z-index: 30; overflow: hidden; }
@@ -39,27 +92,23 @@
         .playing .eye { height: 2px; border-radius: 2px; margin-top: 3px; }
         .sway-active { animation: sway 6s ease-in-out infinite; }
 
-        @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
-        @keyframes sway { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
-
-        /* --- ANIMATIONS SPECIFIQUES --- */
-        
-        /* 1. ZZZ (Bruit Rose) - Retour à l'original */
-        .zzz { position: absolute; color: #fb7185; font-weight: bold; opacity: 0; animation: zMove 4s ease-out forwards; font-size: 28px; }
-        @keyframes zMove { 
-            0% { transform: translate(0, 0) scale(0.5); opacity: 0; } 
+        .zzz { 
+            position: absolute; color: #fb7185; 
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; font-weight: 900; 
+            opacity: 0; animation: zFloat 4s ease-out forwards; 
+        }
+        @keyframes zFloat { 
+            0% { transform: translate(0, 0) scale(0.5) rotate(-10deg); opacity: 0; } 
             20% { opacity: 1; } 
-            100% { transform: translate(40px, -150px) scale(1.5); opacity: 0; } 
+            100% { transform: translate(60px, -120px) scale(1.8) rotate(10deg); opacity: 0; } 
         }
 
-        /* 2. VAGUES (Waves) - Remontées */
         .wave-line { 
             position: absolute; left: -10%; width: 120%; height: 120px; 
             background: linear-gradient(0deg, rgba(56, 189, 248, 0.2), transparent);
             border-top: 2px solid rgba(56, 189, 248, 0.4);
             border-radius: 50% 50% 0 0;
-            bottom: -20px; /* Remonté pour être plus visible */
-            opacity: 0; 
+            bottom: -20px; opacity: 0; 
             animation: waveFlow 8s ease-in-out infinite; 
         }
         @keyframes waveFlow { 
@@ -68,23 +117,34 @@
             100% { transform: translateX(-50px) translateY(0); opacity: 0; } 
         }
 
-        /* 3. ESPACE (Space) */
+        /* NOUVELLE ANIMATION ESPACE : WARP DRIVE */
         .astro {
-            position: absolute; width: 4px; height: 4px;
-            background: white;
-            transform: rotate(45deg); /* Losange */
+            position: absolute; background: white; 
+            /* Centre le point de transformation pour que le scale se fasse depuis le milieu de l'étoile */
+            transform: translate(-50%, -50%) rotate(45deg); 
             box-shadow: 0 0 4px white;
-            animation: twinkle 3s ease-in-out infinite;
+            opacity: 0;
+            /* Utilise 'both' pour que l'état final (opacity: 0) soit maintenu */
+            animation: warpDrive ease-in infinite both; 
         }
-        @keyframes twinkle { 0%, 100% { opacity: 0.3; transform: scale(0.8) rotate(45deg); } 50% { opacity: 1; transform: scale(1.2) rotate(45deg); } }
 
-        /* 4. PLUIE (Rain) - Gouttes nettes */
+        @keyframes warpDrive {
+            0% {
+                /* Départ : petite taille, position initiale */
+                transform: translate(-50%, -50%) scale(0.2) rotate(45deg);
+                opacity: 0;
+            }
+            10% { opacity: 1; } /* Apparition rapide */
+            100% {
+                /* Arrivée : Déplacement vers la destination calculée en JS, grande taille, disparition */
+                transform: translate(var(--dest-x), var(--dest-y)) scale(4) rotate(45deg);
+                opacity: 0;
+            }
+        }
+
         .drop {
-            position: absolute; width: 6px; height: 12px;
-            background: #93c5fd; 
-            border-radius: 2px;
-            opacity: 0.7;
-            transform: rotate(10deg);
+            position: absolute; width: 6px; height: 12px; background: #93c5fd; 
+            border-radius: 2px; opacity: 0.7; transform: rotate(10deg);
             animation: dropFall 0.8s linear infinite;
         }
         @keyframes dropFall {
@@ -93,11 +153,9 @@
             100% { transform: translate(-10px, 105vh) rotate(10deg); opacity: 0; }
         }
 
-        /* 5. VENT (Wind) - Feuilles */
         .leaf {
             position: absolute; width: 14px; height: 14px;
-            border-radius: 0 100% 0 100%; /* Forme de feuille */
-            opacity: 0.9; pointer-events: none;
+            border-radius: 0 100% 0 100%; opacity: 0.9; pointer-events: none;
             animation: leafFall 6s linear forwards;
         }
         @keyframes leafFall {
@@ -106,12 +164,9 @@
             100% { transform: translate(calc(100vw + 50px), calc(100vh + 100px)) rotate(360deg); opacity: 0; }
         }
 
-        /* 6. FEU (Cheminée) - Braises */
         .ember {
-            position: absolute; width: 6px; height: 6px;
-            background: #fb923c;
-            border-radius: 2px; 
-            animation: floatUpRotate 4s linear forwards;
+            position: absolute; width: 6px; height: 6px; background: #fb923c;
+            border-radius: 2px; animation: floatUpRotate 4s linear forwards;
         }
         .fire-glow {
             position: absolute; inset: 0; background: radial-gradient(circle at 50% 80%, rgba(234, 88, 12, 0.2), transparent 70%);
@@ -122,35 +177,28 @@
             100% { transform: translateY(-200px) rotate(180deg); opacity: 0; }
         }
 
-        /* 7. RIVIERE (River) - Eau qui coule */
-        .flow-line {
-            position: absolute; height: 2px; background: rgba(255, 255, 255, 0.5);
-            border-radius: 2px;
-            box-shadow: 0 0 4px #38bdf8;
-            animation: flowRight 3s linear infinite;
-        }
-        @keyframes flowRight {
-            0% { transform: translateX(-100px) scaleX(0.5); opacity: 0; }
-            20% { opacity: 0.8; transform: translateX(0) scaleX(1); }
-            80% { opacity: 0.8; transform: translateX(50vw) scaleX(1); }
-            100% { transform: translateX(calc(100vw + 50px)) scaleX(0.5); opacity: 0; }
-        }
-
-        /* 8. RUISSEAU (Stream) - Particules montantes */
         .stream-speck {
-            position: absolute; width: 4px; height: 4px;
-            background: #bae6fd; /* Bleu très clair */
-            border-radius: 50%;
-            box-shadow: 0 0 6px #7dd3fc;
+            position: absolute; width: 4px; height: 4px; background: #bae6fd; 
+            border-radius: 50%; box-shadow: 0 0 6px #7dd3fc;
             animation: riseHigh 6s ease-out forwards;
         }
         @keyframes riseHigh {
             0% { transform: translateY(0) translateX(0); opacity: 0; }
             10% { opacity: 0.8; }
-            100% { transform: translateY(-75vh) translateX(20px); opacity: 0; } /* Monte haut */
+            100% { transform: translateY(-75vh) translateX(20px); opacity: 0; } 
+        }
+
+        .stream-bubble {
+            position: absolute; bottom: 0; background: rgba(186, 230, 253, 0.4);
+            border-radius: 50%; box-shadow: inset 0 0 4px rgba(255,255,255,0.3);
+            opacity: 0; animation: bubbleUp linear forwards;
+        }
+        @keyframes bubbleUp {
+            0% { transform: translateY(0) scale(0.8); opacity: 0; }
+            20% { opacity: 0.5; }
+            100% { transform: translateY(-80vh) scale(1.2); opacity: 0; }
         }
         
-        /* UI */
         .label-row { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: bold; opacity: 0.7; margin-bottom: 5px; }
         .control-group { text-align: left; margin-top: 18px; }
         select { width: 100%; padding: 12px; border-radius: 12px; background: #2d3748; border: 1px solid rgba(255,255,255,0.1); color: white; appearance: none; cursor: pointer; }
@@ -158,7 +206,21 @@
 </head>
 <body>
     <div class="anim-container" id="bgAnimContainer"></div> 
-    <div class="anim-container" id="animContainer"></div>    
+    <div class="anim-container" id="animContainer"></div>
+    
+    <div id="riverParallaxContainer">
+        <div class="river-layer layer-1"></div>
+        <div class="river-layer layer-2"></div>
+        <div class="river-layer layer-3"></div>
+        <div class="river-layer layer-4"></div>
+        <div class="river-layer layer-5"></div>
+        <div class="river-layer layer-6"></div>
+        <div class="river-layer layer-7"></div>
+        <div class="river-layer layer-8"></div>
+        <div class="river-layer layer-9"></div>
+        <div class="river-layer layer-10"></div>
+    </div>
+    
     <div class="container">
         <div class="card">
             <h2 style="margin:0;">Sleepy Bobby</h2>
@@ -215,7 +277,6 @@
     <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA" type="audio/wav">
 </audio>
 <script>
-    // --- CONFIGURATION ---
     const phrases = [
         "Bobby ébouriffe ses plumes pour te border.", "Chut... Bobby troque son chant contre un doux murmure.",
         "Un petit nid de sons pour une grande nuit de rêves.", "Bobby ferme un œil... puis l'autre... avec toi.",
@@ -226,14 +287,12 @@
         "A little piece of Ireland, un petit coin de France, et beaucoup de dodo.", "Slán abhaile... Bobby te souhaite un doux retour au pays des songes."
     ];
 
-    // --- VARIABLES GLOBALES ---
     let visualInterval, countdownInterval, fxInterval;
     let isPlaying = false;
     let audioCtx, masterGain, currentSource;
     let audioBuffers = {}; 
     let endTime = 0;
 
-    // FICHIERS AUDIO
     const SOUND_FILES = {
         stream: 'res/813251__nicktayloe__cave-stream-loop.wav', 
         river: 'res/443869__eardeer__water_flow_dam_distant_loop.wav', 
@@ -251,7 +310,6 @@
         crackle: 'res/823274__hannagreen__sparks_mediumdensity3.wav' 
     };
 
-    // --- FONCTIONS UI ---
     function displayNewPhrase() { 
         document.getElementById('bobbyPhrase').textContent = phrases[Math.floor(Math.random() * phrases.length)]; 
     }
@@ -261,7 +319,6 @@
         Array.from(s.options).forEach(o => o.text = o.getAttribute('data-base')); 
     }
 
-    // --- MOTEUR AUDIO ---
     async function initAudio() {
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -280,20 +337,15 @@
         phraseBox.textContent = "Chargement...";
 
         try {
-            console.log("Tentative de chargement : " + url);
             const response = await fetch(url);
-            
             if (!response.ok) throw new Error(`Fichier introuvable (${response.status})`);
-            
             const contentType = response.headers.get("content-type");
             if (contentType && contentType.includes("text/html")) throw new Error("Erreur 404 (Fichier non trouvé)");
-
             const arrayBuffer = await response.arrayBuffer();
             const decodedData = await audioCtx.decodeAudioData(arrayBuffer);
             audioBuffers[url] = decodedData;
             phraseBox.textContent = originalText;
             return decodedData;
-
         } catch (e) {
             console.error("ERREUR CRITIQUE:", e);
             phraseBox.innerHTML = `<span style="color:#fb7185; font-size:0.8em">Erreur: ${url} introuvable !</span>`;
@@ -305,14 +357,22 @@
         if (!isPlaying) return;
         const buffer = await getAudioBuffer(FX_FILES[key]);
         if (!buffer) return;
-
         const source = audioCtx.createBufferSource();
         source.buffer = buffer;
         const fxGain = audioCtx.createGain();
-        fxGain.gain.value = 0.6; 
+        
+        fxGain.gain.value = key === 'thunder' ? 2.5 : 0.6; 
+        
         source.connect(fxGain);
         fxGain.connect(masterGain);
         source.start(0);
+
+        if (key === 'thunder') {
+            const card = document.querySelector('.card');
+            card.classList.remove('lightning-active');
+            void card.offsetWidth; 
+            card.classList.add('lightning-active');
+        }
     }
 
     async function startAudio(mode) {
@@ -377,7 +437,6 @@
         }
     }
 
-    // --- MEDIA SESSION ---
     function updateMediaSession(modeKey) {
         if ('mediaSession' in navigator) {
             const modeNames = {
@@ -424,21 +483,28 @@
         updateVisuals();
 
         const s = document.getElementById('timerSelect');
-        const selectedOption = s.options[s.selectedIndex];
         let mins = parseInt(s.value);
         if (mins > 0) {
             endTime = Date.now() + (mins * 60 * 1000);
-            countdownInterval = setInterval(() => {
-                const now = Date.now();
-                const diff = Math.ceil((endTime - now) / 1000);
-                if (diff <= 0) stopBobby();
-                else {
-                    let m = Math.floor(diff / 60);
-                    let sec = diff % 60;
-                    selectedOption.text = `${m}:${sec < 10 ? '0' : ''}${sec} restant`;
-                }
-            }, 1000);
+            startTimerLoop();
         }
+    }
+
+    function startTimerLoop() {
+        if(countdownInterval) clearInterval(countdownInterval);
+        const s = document.getElementById('timerSelect');
+        const selectedOption = s.options[s.selectedIndex];
+        
+        countdownInterval = setInterval(() => {
+            const now = Date.now();
+            const diff = Math.ceil((endTime - now) / 1000);
+            if (diff <= 0) stopBobby();
+            else {
+                let m = Math.floor(diff / 60);
+                let sec = diff % 60;
+                selectedOption.text = `${m}:${sec < 10 ? '0' : ''}${sec} restant`;
+            }
+        }, 1000);
     }
 
     function stopBobby() {
@@ -453,11 +519,15 @@
         if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
 
         document.getElementById('bobbyBox').classList.remove('playing', 'sway-active');
+        document.querySelector('.card').classList.remove('lightning-active'); 
         clearInterval(visualInterval);
         clearInterval(countdownInterval);
         
         document.getElementById('animContainer').innerHTML = '';
         document.getElementById('bgAnimContainer').innerHTML = '';
+        
+        document.getElementById('riverParallaxContainer').classList.remove('active');
+
         document.getElementById('birdMain').style.boxShadow = "none";
         document.getElementById('bChest').style.filter = "none";
         resetTimerLabels();
@@ -468,32 +538,59 @@
         const b = document.getElementById('bgAnimContainer'); 
         const m = document.getElementById('modeSelect').value;
         
-        // Nettoyage
         f.innerHTML = ''; 
         b.innerHTML = ''; 
         clearInterval(visualInterval);
         
-        // Reset classes Bobby
         const box = document.getElementById('bobbyBox');
         box.classList.remove('sway-active');
         document.getElementById('bChest').style.filter = "none";
+        document.querySelector('.card').classList.remove('lightning-active'); 
 
-        // --- VISUELS STATIQUES DE FOND ---
+        const riverPara = document.getElementById('riverParallaxContainer');
+        if (m === 'river') {
+            riverPara.classList.add('active');
+        } else {
+            riverPara.classList.remove('active');
+        }
+
         if (m === 'space') {
-             for(let i=0; i<30; i++) { 
+             // Génération de beaucoup d'étoiles pour l'effet de vitesse
+             for(let i=0; i<80; i++) { 
                 let s = document.createElement('div');
                 s.className = 'astro';
-                s.style.left = Math.random()*100+'%';
-                s.style.top = Math.random()*100+'%';
-                s.style.animationDelay = Math.random()*3+'s';
-                let scale = 0.5 + Math.random();
-                s.style.width = s.style.height = (4 * scale) + 'px';
+
+                // Position de départ aléatoire
+                const startXPerc = Math.random() * 100;
+                const startYPerc = Math.random() * 100;
+
+                s.style.left = startXPerc + '%';
+                s.style.top = startYPerc + '%';
+
+                // Calcul du vecteur de déplacement depuis le centre (50,50) vers le point de départ
+                // On multiplie par 5 pour s'assurer que l'étoile sorte bien de l'écran
+                const destX = (startXPerc - 50) * 5 + 'vw';
+                const destY = (startYPerc - 50) * 5 + 'vh'; 
+
+                // Assignation des variables CSS pour l'animation
+                s.style.setProperty('--dest-x', destX);
+                s.style.setProperty('--dest-y', destY);
+
+                // Vitesse et délai aléatoires pour l'effet de profondeur
+                const duration = 3 + Math.random() * 6; // Entre 3s et 9s
+                s.style.animationDuration = duration + 's';
+                // Délai négatif pour que l'animation soit déjà en cours au démarrage
+                s.style.animationDelay = '-' + (Math.random() * duration) + 's';
+
+                // Variation de taille
+                let scale = Math.random();
+                s.style.width = s.style.height = (2 + scale * 4) + 'px';
+                
                 b.appendChild(s); 
             }
         }
         
         if (m === 'waves') {
-            // Vagues remontées, plus de bulles
             for(let i=0;i<3;i++){
                 let w=document.createElement('div');
                 w.className='wave-line';
@@ -502,18 +599,15 @@
             }
         }
 
-        // --- BOUCLE D'ANIMATION (Objets dynamiques) ---
         visualInterval = setInterval(() => {
             if(!isPlaying) return;
             
-            // 1. VENT (Restauré)
             if (m === 'wind') {
                 let el = document.createElement('div'); el.className='leaf';
                 el.style.left = Math.random()*100+'%'; el.style.top='-20px';
                 el.style.backgroundColor=['#4ade80', '#22c55e', '#86efac'][Math.floor(Math.random()*3)];
                 f.appendChild(el); setTimeout(()=>el.remove(), 6000);
             
-            // 2. PLUIE / ORAGE
             } else if (m === 'rain' || m === 'storm') {
                 for(let k=0; k<2; k++){
                     let el = document.createElement('div'); el.className='drop';
@@ -523,7 +617,6 @@
                     f.appendChild(el); setTimeout(()=>el.remove(), 1000);
                 }
 
-            // 3. FEU
             } else if (m === 'fire') {
                  if (!b.querySelector('.fire-glow')) { let glow = document.createElement('div'); glow.className = 'fire-glow'; b.appendChild(glow); setTimeout(() => glow.style.opacity = 1, 10); }
                  let el = document.createElement('div'); el.className='ember';
@@ -533,42 +626,65 @@
                  f.appendChild(el); setTimeout(()=>el.remove(), 4000);
                  const i = 0.9 + Math.random() * 0.3; document.getElementById('bChest').style.filter = `brightness(${i}) saturate(1.2)`;
             
-            // 4. RIVIERE (Eau qui coule)
-            } else if (m === 'river') {
-                let el = document.createElement('div'); el.className='flow-line';
-                el.style.left = '-100px'; 
-                el.style.top = (60 + Math.random()*40) + '%'; // Partie basse
-                el.style.width = (50 + Math.random()*100) + 'px';
-                f.appendChild(el); setTimeout(()=>el.remove(), 3000);
-
-            // 5. RUISSEAU (Remonté et plus visible)
             } else if (m === 'stream') {
                 let el = document.createElement('div'); el.className='stream-speck';
                 el.style.left = Math.random()*100+'%';
                 el.style.bottom = '0';
                 f.appendChild(el); setTimeout(()=>el.remove(), 6000);
+                if (Math.random() > 0.5) {
+                    let bubble = document.createElement('div');
+                    bubble.className = 'stream-bubble';
+                    const size = 5 + Math.random() * 15;
+                    bubble.style.width = size + 'px';
+                    bubble.style.height = size + 'px';
+                    bubble.style.left = Math.random() * 100 + '%';
+                    bubble.style.animationDuration = (4 + Math.random() * 4) + 's';
+                    b.appendChild(bubble);
+                    setTimeout(() => bubble.remove(), 8000);
+                }
 
-            // 6. BRUIT ROSE (Restauré zZz)
             } else if (m === 'pink') {
                 let el = document.createElement('div'); el.className='zzz'; 
                 el.textContent = 'z';
-                el.style.left = (45 + Math.random()*10) + '%'; 
+                el.style.left = (48 + Math.random()*5) + '%'; 
                 el.style.top = '40%';
                 f.appendChild(el); setTimeout(()=>el.remove(), 4000);
             }
 
         }, m === 'rain' || m === 'storm' ? 100 : 
-           m === 'stream' ? 400 : // Plus de particules pour le ruisseau
-           m === 'river' ? 300 : // Rivière fluide
-           600); 
+           m === 'stream' ? 400 :
+           m === 'pink' ? 1000 : 600); 
 
-        // Mouvement de Bobby seulement pour le vent
         if (m === 'wind') box.classList.add('sway-active');
     }
 
-    document.getElementById('timerSelect').addEventListener('change', () => { if (isPlaying) startBobby(); });
-    document.getElementById('playBtn').addEventListener('click', () => startBobby());
-    document.getElementById('modeSelect').addEventListener('change', () => { if(isPlaying) startBobby(); });
+    document.getElementById('timerSelect').addEventListener('change', () => { 
+        if (isPlaying) {
+            const s = document.getElementById('timerSelect');
+            let mins = parseInt(s.value);
+            if (mins > 0) {
+                endTime = Date.now() + (mins * 60 * 1000);
+                startTimerLoop();
+            } else {
+                clearInterval(countdownInterval);
+                resetTimerLabels();
+            }
+        }
+    });
+
+    document.getElementById('modeSelect').addEventListener('change', () => { 
+        if(isPlaying) {
+            const mode = document.getElementById('modeSelect').value;
+            updateMediaSession(mode);
+            startAudio(mode);
+            updateVisuals();
+        }
+    });
+    
+    document.getElementById('playBtn').addEventListener('click', () => {
+        if (isPlaying) stopBobby(); else startBobby();
+    });
+    
     document.getElementById('volume').addEventListener('input', (e) => {
         document.getElementById('volPerc').textContent = Math.round(e.target.value * 100) + "%";
         updateVolume(e.target.value);
