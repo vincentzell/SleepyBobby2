@@ -8,11 +8,10 @@ const ASSETS = [
   'res/813251__nicktayloe__cave-stream-loop.wav',
   'res/443869__eardeer__water_flow_dam_distant_loop.wav',
   'res/349312__newagesoup__pink_noise-10s.wav',
-  'res/829626__nox_sound__ambiance_ocean_praia_dos_moinhos_loop_stereo_01(1).wav',
+  'res/829626__ocean.wav',
   'res/66472__digifishmusic__rain_on_a_tin_roof_loop.wav',
   'res/651545__nsstudios__wind-draft-loop-3.wav',
   'res/676854__darrenpasemko__wind_looping_01.wav',
-  // Les nouveaux fichiers que tu as ajoutés :
   'res/612277__robinhood76__10835-big-fire-loop.wav',
   'res/778363__blondpanda__distant_rumbling_thunder_in_rain_02.wav',
   'res/823274__hannagreen__sparks_mediumdensity3.wav'
