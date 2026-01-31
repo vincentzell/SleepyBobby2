@@ -137,7 +137,7 @@
         @keyframes dropFall {
             0% { transform: translate(0, -20px) rotate(10deg); opacity: 0; }
             20% { opacity: 1; }
-            100% { transform: translate(-10px, 105vh) rotate(10deg); opacity: 0; }
+            100% { transform: translate(-10px, 105vh) rotate(10deg); opacity: 0; } 
         }
 
         .leaf {
@@ -260,9 +260,10 @@
             </div>
         </div>
     </div>
-<audio id="silentPlayer" loop style="display:none;">
-    <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA" type="audio/wav">
-</audio>
+
+    <audio id="silentPlayer" loop style="opacity:0; position:fixed; bottom:0; pointer-events:none;">
+        <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA" type="audio/wav">
+    </audio>
 
 <script>
     if ('serviceWorker' in navigator) {
@@ -288,6 +289,7 @@
     let audioCtx, masterGain, currentSource;
     let audioBuffers = {}; 
     let endTime = 0;
+    let wakeLock = null; // Pour empêcher le téléphone de s'endormir
 
     const SOUND_FILES = {
         stream: 'res/813251__nicktayloe__cave-stream-loop.wav', 
@@ -313,6 +315,17 @@
     function resetTimerLabels() { 
         const s = document.getElementById('timerSelect'); 
         Array.from(s.options).forEach(o => o.text = o.getAttribute('data-base')); 
+    }
+
+    async function requestWakeLock() {
+        if ('wakeLock' in navigator) {
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                console.log('Wake Lock actif');
+            } catch (err) {
+                console.error(`${err.name}, ${err.message}`);
+            }
+        }
     }
 
     async function initAudio() {
@@ -455,11 +468,16 @@
             stopBobby();
             return;
         }
+        
+        // 1. Démarrage du lecteur silencieux pour leurrer Android
         const silentPlayer = document.getElementById('silentPlayer');
         try {
             silentPlayer.volume = 1.0; 
             await silentPlayer.play();
         } catch(e) { console.error("Erreur silent player", e); }
+
+        // 2. Activation du Wake Lock pour garder le CPU actif
+        await requestWakeLock();
 
         isPlaying = true;
         displayNewPhrase();
@@ -504,6 +522,11 @@
         silentPlayer.pause();
         silentPlayer.currentTime = 0;
 
+        // Libération du Wake Lock
+        if (wakeLock !== null) {
+            wakeLock.release().then(() => { wakeLock = null; });
+        }
+
         stopAudio(true);
         if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
 
@@ -532,8 +555,6 @@
         clearInterval(visualInterval);
         
         const box = document.getElementById('bobbyBox');
-        
-        // RESET DU BALANCEMENT
         box.classList.remove('sway-active');
         
         document.getElementById('bChest').style.filter = "none";
@@ -637,6 +658,20 @@
         }
     }
 
+    // Gestion du retour au premier plan pour reconnecter l'audio si Android l'a suspendu
+    document.addEventListener("visibilitychange", async () => {
+        if (!document.hidden && isPlaying && audioCtx && audioCtx.state === 'suspended') {
+            await audioCtx.resume();
+            // On relance le silent player pour être sûr
+            const silentPlayer = document.getElementById('silentPlayer');
+            if (silentPlayer.paused) silentPlayer.play().catch(e=>console.log(e));
+        }
+        // Récupérer le WakeLock s'il a été perdu (souvent le cas en changeant d'app)
+        if (!document.hidden && isPlaying && wakeLock === null) {
+            await requestWakeLock();
+        }
+    });
+
     document.getElementById('modeSelect').addEventListener('change', async (e) => {
         if (isPlaying) {
             const newMode = e.target.value;
@@ -646,7 +681,6 @@
         }
     });
 
-    // --- CORRECTION MINUTEUR : On écoute le changement ---
     document.getElementById('timerSelect').addEventListener('change', (e) => {
         resetTimerLabels();
         if (isPlaying) {
