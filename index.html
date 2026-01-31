@@ -170,31 +170,38 @@
         </div>
     </div>
 
-   <script>
+  <script>
         const phrases = ["Bobby ébouriffe ses plumes pour te border.","Chut... Bobby troque son chant contre un doux murmure.","Un petit nid de sons pour une grande nuit de rêves.","Bobby ferme un œil... puis l'autre... avec toi.","Bobby says bonne nuit and wishes you sweet dreams.","Un battement d'ailes, un petit chirp, et hop au dodo !","Bobby is learning to snore in two languages.","Bobby has his head in the clouds, entre Dublin et Paris.","Bobby range son bec sous son aile, c'est l'heure.","Le dernier rouge-gorge couché éteint la lune !","Bobby rêve de trèfles irlandais et de jardins français.","De Connemara à la Provence, Bobby te chante le sommeil.","A little piece of Ireland, un petit coin de France, et beaucoup de dodo.","Slán abhaile... Bobby te souhaite un doux retour au pays des songes."];
-        let visualInterval, countdownInterval, isPlaying = false, timeLeft = 0;
+        let visualInterval, countdownInterval, fxInterval, isPlaying = false, timeLeft = 0;
 
     function displayNewPhrase() { document.getElementById('bobbyPhrase').textContent = phrases[Math.floor(Math.random() * phrases.length)]; }
     function resetTimerLabels() { const s = document.getElementById('timerSelect'); Array.from(s.options).forEach(o => o.text = o.getAttribute('data-base')); }
 
-    // --- NOUVEAU MOTEUR AUDIO (Samples & Loops) ---
+    // --- MOTEUR AUDIO AVANCÉ (Loops + FX) ---
     let audioCtx, masterGain, currentSource;
     let audioBuffers = {}; // Cache pour ne pas re-télécharger
 
     // CONFIGURATION DES FICHIERS AUDIO
-    // Assure-toi que les fichiers existent dans le dossier "res" (ou "sounds")
-const placeholder = 'res/416529__inspectorj__bird-whistling-single-robin-a.wav';
+    const placeholder = 'res/416529__inspectorj__bird-whistling-single-robin-a.wav';
 
+    // 1. Les Boucles de fond (Ambiances continues)
     const SOUND_FILES = {
-        stream: 'res/813251__nicktayloe__cave-stream-loop.wav', // Le seul vrai son pour l'instant
+        stream: 'res/813251__nicktayloe__cave-stream-loop.wav', 
         river: 'res/443869__eardeer__water_flow_dam_distant_loop.wav', 
-        pink: placeholder, 
-        waves: placeholder,
-        rain: placeholder, 
-        storm: placeholder, 
-        wind: placeholder, 
-        fire: placeholder, 
-        space: placeholder
+        pink: 'res/349312__newagesoup__pink_noise-10s.wav', 
+        waves: 'res/829626__nox_sound__ambiance_ocean_praia_dos_moinhos_loop_stereo_01(1).wav',
+        rain: 'res/66472__digifishmusic__rain_on_a_tin_roof_loop.wav',
+        // Astuce : Pour l'orage, on utilise la pluie comme base !
+        storm: 'res/66472__digifishmusic__rain_on_a_tin_roof_loop.wav', 
+        wind: 'res/651545__nsstudios__wind-draft-loop-3.wav', 
+        fire: placeholder, // Chercher "fire loop" plus tard
+        space: 'res/676854__darrenpasemko__wind_looping_01.wav'
+    };
+
+    // 2. Les Effets Ponctuels (Sons courts qui se déclenchent aléatoirement)
+    const FX_FILES = {
+        thunder: placeholder, // Chercher "thunder rumble" (court)
+        crackle: placeholder  // Chercher "wood crackle" (court)
     };
 
     async function initAudio() {
@@ -207,61 +214,121 @@ const placeholder = 'res/416529__inspectorj__bird-whistling-single-robin-a.wav';
         if (audioCtx.state === 'suspended') await audioCtx.resume();
     }
 
-    async function getAudioBuffer(mode) {
-        if (audioBuffers[mode]) return audioBuffers[mode];
-
-        const filePath = SOUND_FILES[mode];
-        if (!filePath) {
-            console.warn("Aucun fichier audio configuré pour : " + mode);
-            return null;
-        }
-
-        const originalPhrase = document.getElementById('bobbyPhrase').textContent;
-        document.getElementById('bobbyPhrase').textContent = "Bobby écoute la nature...";
+    // Charge un fichier (Loop ou FX)
+    async function getAudioBuffer(url) {
+        if (audioBuffers[url]) return audioBuffers[url];
+        
+        // Petit message de chargement discret
+        const phraseBox = document.getElementById('bobbyPhrase');
+        const originalText = phraseBox.textContent;
+        phraseBox.textContent = "Bobby tend l'oreille...";
 
         try {
-            const response = await fetch(filePath);
-            if (!response.ok) throw new Error("Fichier introuvable");
+            const response = await fetch(url);
+            if (!response.ok) throw new Error("Fichier introuvable : " + url);
             const arrayBuffer = await response.arrayBuffer();
             const decodedData = await audioCtx.decodeAudioData(arrayBuffer);
-            audioBuffers[mode] = decodedData;
-            document.getElementById('bobbyPhrase').textContent = originalPhrase;
+            audioBuffers[url] = decodedData;
+            phraseBox.textContent = originalText;
             return decodedData;
         } catch (e) {
-            console.error("Erreur chargement audio:", e);
-            document.getElementById('bobbyPhrase').textContent = "Bobby ne trouve pas sa partition (Fichier manquant).";
+            console.error(e);
+            phraseBox.textContent = "Bobby ne trouve pas ce son.";
             return null;
         }
     }
 
-    async function startAudio(mode) {
-        await initAudio();
-        stopAudio(); // Coupe le son précédent
-
-        const buffer = await getAudioBuffer(mode);
-        if (!buffer) return; // Si pas de fichier, on ne joue rien (mais les visuels continuent)
+    // Joue un son ponctuel (Tonnerre, Craquement)
+    async function playOneShot(key) {
+        if (!isPlaying) return;
+        const buffer = await getAudioBuffer(FX_FILES[key]);
+        if (!buffer) return;
 
         const source = audioCtx.createBufferSource();
         source.buffer = buffer;
-        source.loop = true; // Boucle parfaite (Gapless)
         
+        // Créer un gain spécifique pour le FX pour qu'il ne soit pas trop fort
+        const fxGain = audioCtx.createGain();
+        fxGain.gain.value = 0.6; // 60% du volume global
+        
+        source.connect(fxGain);
+        fxGain.connect(masterGain);
+        source.start(0);
+    }
+
+    async function startAudio(mode) {
+        await initAudio();
+        stopAudio(); // Coupe le son précédent et les FX
+
+        const loopUrl = SOUND_FILES[mode];
+        if (!loopUrl) return;
+
+        // 1. Démarrer la boucle de base
+        const buffer = await getAudioBuffer(loopUrl);
+        if (!buffer) return;
+
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.loop = true; 
+        
+        // Fade In (Transition douce)
+        const v = masterGain.gain.value;
+        masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
+        masterGain.gain.linearRampToValueAtTime(v, audioCtx.currentTime + 1);
+
         source.connect(masterGain);
         source.start(0);
         currentSource = source;
+
+        // 2. Gérer les Effets Spéciaux (FX)
+        if (mode === 'storm') {
+            // Lance un tonnerre toutes les 5 à 15 secondes
+            fxLoop('thunder', 5000, 15000);
+        } else if (mode === 'fire') {
+            // Lance un craquement toutes les 2 à 8 secondes
+            fxLoop('crackle', 2000, 8000);
+        }
+    }
+
+    function fxLoop(fxName, minTime, maxTime) {
+        const delay = minTime + Math.random() * (maxTime - minTime);
+        fxInterval = setTimeout(() => {
+            if (isPlaying) {
+                playOneShot(fxName);
+                fxLoop(fxName, minTime, maxTime); // Relance la boucle
+            }
+        }, delay);
     }
 
     function stopAudio() {
         if (currentSource) {
             try {
-                currentSource.stop();
-                currentSource.disconnect();
+                // Fade Out rapide
+                masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+                masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
+                masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+                
+                setTimeout(() => {
+                    if (currentSource) {
+                        currentSource.stop();
+                        currentSource.disconnect();
+                        currentSource = null;
+                    }
+                    // On remet le volume pour le prochain
+                    updateVolume(document.getElementById('volume').value);
+                }, 350);
+
             } catch (e) {}
-            currentSource = null;
         }
+        // Arrêter les timers d'effets spéciaux
+        if (fxInterval) clearTimeout(fxInterval);
     }
 
     function updateVolume(val) {
-        if (masterGain) masterGain.gain.setTargetAtTime(val, audioCtx.currentTime, 0.1);
+        if (masterGain) {
+            masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+            masterGain.gain.setTargetAtTime(val, audioCtx.currentTime, 0.1);
+        }
     }
 
     // --- VISUAL ENGINE ---
@@ -271,6 +338,8 @@ const placeholder = 'res/416529__inspectorj__bird-whistling-single-robin-a.wav';
         document.getElementById('bobbyBox').classList.remove('playing', 'sway-active');
         clearInterval(visualInterval);
         clearInterval(countdownInterval);
+        if (fxInterval) clearTimeout(fxInterval); // Stop FX
+        
         document.getElementById('animContainer').innerHTML = '';
         document.getElementById('bgAnimContainer').innerHTML = '';
         document.getElementById('birdMain').style.boxShadow = "none";
