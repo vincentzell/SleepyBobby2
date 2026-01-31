@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
     <link rel="apple-touch-icon" href="icon.png">
-	<link rel="icon" type="image/svg+xml" href="bobby-anim.svg">
-    <title>Sleepy Bobby</title>
+    <link rel="icon" type="image/svg+xml" href="bobby-anim.svg">
     <link rel="manifest" href="manifest.json">
+    <title>Sleepy Bobby</title>
+
+    <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Bobby">
+
     <style>
         :root {
             --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --primary: #38bdf8;
@@ -30,16 +34,8 @@
         }
         #riverParallaxContainer.active { display: block; opacity: 1; }
 
-        #riverParallaxContainer::after {
-            content: ''; position: absolute; top: 30%; left: 12%;
-            width: 10%; height: 60%;
-            background: linear-gradient(to bottom, transparent, rgba(255, 255, 240, 0.5) 30%, rgba(255, 255, 240, 0.1) 80%, transparent);
-            filter: blur(12px);
-            mix-blend-mode: color-dodge;
-            z-index: 20;
-            pointer-events: none;
-            transform: skewX(-5deg);
-        }
+        /* REFLET SUPPRIMÉ */
+        #riverParallaxContainer::after { display: none; }
 
         .river-layer {
             position: absolute; bottom: 0; left: 0; width: 200%; 
@@ -47,17 +43,17 @@
             animation: parallaxMove linear infinite;
         }
 
-        .layer-1 { bottom: 0; height: 56vh; opacity: 0.4; animation-duration: 70s; z-index: 1; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,20 C300,25 600,15 900,22 1200,20 L1200,120 L0,120 Z' fill='%230a0f1d'/%3E%3C/svg%3E"); }
-        .layer-2 { bottom: -1vh; height: 54vh; opacity: 0.45; animation-duration: 60s; z-index: 2; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,22 C250,32 550,12 850,28 1200,22 L1200,120 L0,120 Z' fill='%230e1525'/%3E%3C/svg%3E"); }
-        .layer-3 { bottom: -2vh; height: 52vh; opacity: 0.5; animation-duration: 50s; z-index: 3; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,25 C400,15 800,35 1200,25 L1200,120 L0,120 Z' fill='%23131c31'/%3E%3C/svg%3E"); }
-        .layer-4 { bottom: -3vh; height: 50vh; opacity: 0.55; animation-duration: 42s; z-index: 4; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,28 C350,38 700,18 1050,32 1200,28 L1200,120 L0,120 Z' fill='%2317223b'/%3E%3C/svg%3E"); }
-        .layer-5 { bottom: -4vh; height: 48vh; opacity: 0.6; animation-duration: 35s; z-index: 5; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,30 C200,40 500,20 1200,30 L1200,120 L0,120 Z' fill='%231c2945'/%3E%3C/svg%3E"); }
-        .layer-6 { bottom: -5vh; height: 46vh; opacity: 0.65; animation-duration: 28s; z-index: 6; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,20 C300,25 600,15 900,22 1200,20 L1200,120 L0,120 Z' fill='%23223152'/%3E%3C/svg%3E"); }
-        .layer-7 { bottom: -6vh; height: 44vh; opacity: 0.7; animation-duration: 22s; z-index: 7; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,22 C250,32 550,12 850,28 1200,22 L1200,120 L0,120 Z' fill='%232a3d61'/%3E%3C/svg%3E"); }
-        .layer-8 { bottom: -7vh; height: 42vh; opacity: 0.75; animation-duration: 16s; z-index: 8; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,25 C400,15 800,35 1200,25 L1200,120 L0,120 Z' fill='%23334a73'/%3E%3C/svg%3E"); }
-        .layer-9 { bottom: -8vh; height: 40vh; opacity: 0.7; animation-duration: 12s; z-index: 9; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,28 C350,38 700,18 1050,32 1200,28 L1200,120 L0,120 Z' fill='%23283a5e'/%3E%3C/svg%3E"); }
-        
-        .layer-10 { bottom: -9vh; height: 38vh; opacity: 1; animation: none; z-index: 10; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,30 C200,40 500,20 1200,30 L1200,120 L0,120 Z' fill='%230f172a'/%3E%3C/svg%3E"); }
+        /* HAUTEURS CORRIGÉES (RIVIÈRE BASSE) */
+        .layer-1 { bottom: 0; height: 35vh; opacity: 0.4; animation-duration: 70s; z-index: 1; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,20 C300,25 600,15 900,22 1200,20 L1200,120 L0,120 Z' fill='%230a0f1d'/%3E%3C/svg%3E"); }
+        .layer-2 { bottom: -1vh; height: 33vh; opacity: 0.45; animation-duration: 60s; z-index: 2; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,22 C250,32 550,12 850,28 1200,22 L1200,120 L0,120 Z' fill='%230e1525'/%3E%3C/svg%3E"); }
+        .layer-3 { bottom: -2vh; height: 31vh; opacity: 0.5; animation-duration: 50s; z-index: 3; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,25 C400,15 800,35 1200,25 L1200,120 L0,120 Z' fill='%23131c31'/%3E%3C/svg%3E"); }
+        .layer-4 { bottom: -3vh; height: 29vh; opacity: 0.55; animation-duration: 42s; z-index: 4; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,28 C350,38 700,18 1050,32 1200,28 L1200,120 L0,120 Z' fill='%2317223b'/%3E%3C/svg%3E"); }
+        .layer-5 { bottom: -4vh; height: 27vh; opacity: 0.6; animation-duration: 35s; z-index: 5; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,30 C200,40 500,20 1200,30 L1200,120 L0,120 Z' fill='%231c2945'/%3E%3C/svg%3E"); }
+        .layer-6 { bottom: -5vh; height: 25vh; opacity: 0.65; animation-duration: 28s; z-index: 6; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,20 C300,25 600,15 900,22 1200,20 L1200,120 L0,120 Z' fill='%23223152'/%3E%3C/svg%3E"); }
+        .layer-7 { bottom: -6vh; height: 23vh; opacity: 0.7; animation-duration: 22s; z-index: 7; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,22 C250,32 550,12 850,28 1200,22 L1200,120 L0,120 Z' fill='%232a3d61'/%3E%3C/svg%3E"); }
+        .layer-8 { bottom: -7vh; height: 21vh; opacity: 0.75; animation-duration: 16s; z-index: 8; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,25 C400,15 800,35 1200,25 L1200,120 L0,120 Z' fill='%23334a73'/%3E%3C/svg%3E"); }
+        .layer-9 { bottom: -8vh; height: 19vh; opacity: 0.7; animation-duration: 12s; z-index: 9; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,28 C350,38 700,18 1050,32 1200,28 L1200,120 L0,120 Z' fill='%23283a5e'/%3E%3C/svg%3E"); }
+        .layer-10 { bottom: -9vh; height: 17vh; opacity: 1; animation: none; z-index: 10; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,30 C200,40 500,20 1200,30 L1200,120 L0,120 Z' fill='%230f172a'/%3E%3C/svg%3E"); }
 
         @keyframes parallaxMove { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
@@ -92,11 +88,14 @@
         .playing .bird-body { animation: breathe 4s ease-in-out infinite; }
         .playing .eye { height: 2px; border-radius: 2px; margin-top: 3px; }
         .sway-active { animation: sway 6s ease-in-out infinite; }
+        
+        @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+        @keyframes sway { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(2deg); } 75% { transform: rotate(-2deg); } }
 
         .zzz { 
             position: absolute; color: #fb7185; 
-            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; font-weight: 900; 
-            opacity: 0; animation: zFloat 4s ease-out forwards; 
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; font-weight: 900; font-size: 24px;
+            opacity: 0; animation: zFloat 4s ease-out forwards; pointer-events: none; z-index: 100;
         }
         @keyframes zFloat { 
             0% { transform: translate(0, 0) scale(0.5) rotate(-10deg); opacity: 0; } 
@@ -118,29 +117,18 @@
             100% { transform: translateX(-50px) translateY(0); opacity: 0; } 
         }
 
-        /* NOUVELLE ANIMATION ESPACE : WARP DRIVE */
         .astro {
             position: absolute; background: white; 
-            /* Centre le point de transformation pour que le scale se fasse depuis le milieu de l'étoile */
             transform: translate(-50%, -50%) rotate(45deg); 
             box-shadow: 0 0 4px white;
             opacity: 0;
-            /* Utilise 'both' pour que l'état final (opacity: 0) soit maintenu */
             animation: warpDrive ease-in infinite both; 
         }
 
         @keyframes warpDrive {
-            0% {
-                /* Départ : petite taille, position initiale */
-                transform: translate(-50%, -50%) scale(0.2) rotate(45deg);
-                opacity: 0;
-            }
-            10% { opacity: 1; } /* Apparition rapide */
-            100% {
-                /* Arrivée : Déplacement vers la destination calculée en JS, grande taille, disparition */
-                transform: translate(var(--dest-x), var(--dest-y)) scale(4) rotate(45deg);
-                opacity: 0;
-            }
+            0% { transform: translate(-50%, -50%) scale(0.2) rotate(45deg); opacity: 0; }
+            10% { opacity: 1; } 
+            100% { transform: translate(var(--dest-x), var(--dest-y)) scale(4) rotate(45deg); opacity: 0; }
         }
 
         .drop {
@@ -277,7 +265,16 @@
 <audio id="silentPlayer" loop style="display:none;">
     <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA" type="audio/wav">
 </audio>
+
 <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('Service Worker enregistré:', reg))
+          .catch((err) => console.error('Erreur Service Worker:', err));
+      });
+    }
+
     const phrases = [
         "Bobby ébouriffe ses plumes pour te border.", "Chut... Bobby troque son chant contre un doux murmure.",
         "Un petit nid de sons pour une grande nuit de rêves.", "Bobby ferme un œil... puis l'autre... avec toi.",
@@ -361,9 +358,7 @@
         const source = audioCtx.createBufferSource();
         source.buffer = buffer;
         const fxGain = audioCtx.createGain();
-        
         fxGain.gain.value = key === 'thunder' ? 2.5 : 0.6; 
-        
         source.connect(fxGain);
         fxGain.connect(masterGain);
         source.start(0);
@@ -425,7 +420,6 @@
             currentSource = null;
         }
         if (fxInterval) clearTimeout(fxInterval);
-        
         if (fullStop && 'mediaSession' in navigator) {
             navigator.mediaSession.playbackState = "none";
         }
@@ -445,14 +439,12 @@
                 waves: "Vagues", rain: "Pluie", storm: "Orage",
                 wind: "Vent", fire: "Cheminée", space: "Espace"
             };
-            
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: 'Sleepy Bobby',
                 artist: modeNames[modeKey] || 'Relaxation',
                 album: 'Ambiance Naturelle',
                 artwork: [{ src: 'icon.png', sizes: '512x512', type: 'image/png' }]
             });
-
             navigator.mediaSession.setActionHandler('play', () => { if(!isPlaying) startBobby(); });
             navigator.mediaSession.setActionHandler('pause', () => { if(isPlaying) stopBobby(); });
             navigator.mediaSession.setActionHandler('stop', stopBobby);
@@ -465,7 +457,6 @@
             stopBobby();
             return;
         }
-
         const silentPlayer = document.getElementById('silentPlayer');
         try {
             silentPlayer.volume = 1.0; 
@@ -516,7 +507,6 @@
         silentPlayer.currentTime = 0;
 
         stopAudio(true);
-        
         if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
 
         document.getElementById('bobbyBox').classList.remove('playing', 'sway-active');
@@ -526,9 +516,9 @@
         
         document.getElementById('animContainer').innerHTML = '';
         document.getElementById('bgAnimContainer').innerHTML = '';
+        document.querySelectorAll('.zzz').forEach(e => e.remove());
         
         document.getElementById('riverParallaxContainer').classList.remove('active');
-
         document.getElementById('birdMain').style.boxShadow = "none";
         document.getElementById('bChest').style.filter = "none";
         resetTimerLabels();
@@ -544,7 +534,10 @@
         clearInterval(visualInterval);
         
         const box = document.getElementById('bobbyBox');
+        
+        // RESET DU BALANCEMENT
         box.classList.remove('sway-active');
+        
         document.getElementById('bChest').style.filter = "none";
         document.querySelector('.card').classList.remove('lightning-active'); 
 
@@ -556,37 +549,22 @@
         }
 
         if (m === 'space') {
-             // Génération de beaucoup d'étoiles pour l'effet de vitesse
              for(let i=0; i<80; i++) { 
                 let s = document.createElement('div');
                 s.className = 'astro';
-
-                // Position de départ aléatoire
                 const startXPerc = Math.random() * 100;
                 const startYPerc = Math.random() * 100;
-
                 s.style.left = startXPerc + '%';
                 s.style.top = startYPerc + '%';
-
-                // Calcul du vecteur de déplacement depuis le centre (50,50) vers le point de départ
-                // On multiplie par 5 pour s'assurer que l'étoile sorte bien de l'écran
                 const destX = (startXPerc - 50) * 5 + 'vw';
                 const destY = (startYPerc - 50) * 5 + 'vh'; 
-
-                // Assignation des variables CSS pour l'animation
                 s.style.setProperty('--dest-x', destX);
                 s.style.setProperty('--dest-y', destY);
-
-                // Vitesse et délai aléatoires pour l'effet de profondeur
-                const duration = 3 + Math.random() * 6; // Entre 3s et 9s
+                const duration = 3 + Math.random() * 6; 
                 s.style.animationDuration = duration + 's';
-                // Délai négatif pour que l'animation soit déjà en cours au démarrage
                 s.style.animationDelay = '-' + (Math.random() * duration) + 's';
-
-                // Variation de taille
                 let scale = Math.random();
                 s.style.width = s.style.height = (2 + scale * 4) + 'px';
-                
                 b.appendChild(s); 
             }
         }
@@ -599,6 +577,12 @@
                 b.appendChild(w);
             }
         }
+
+        // --- POINT 4 : VITESSE DYNAMIQUE IMPLÉMENTÉE ICI ---
+        const intervalDelay = 
+            (m === 'rain' || m === 'storm') ? 100 : 
+            (m === 'stream') ? 400 :
+            (m === 'pink') ? 1000 : 600;
 
         visualInterval = setInterval(() => {
             if(!isPlaying) return;
@@ -632,67 +616,46 @@
                 el.style.left = Math.random()*100+'%';
                 el.style.bottom = '0';
                 f.appendChild(el); setTimeout(()=>el.remove(), 6000);
-                if (Math.random() > 0.5) {
-                    let bubble = document.createElement('div');
-                    bubble.className = 'stream-bubble';
-                    const size = 5 + Math.random() * 15;
-                    bubble.style.width = size + 'px';
-                    bubble.style.height = size + 'px';
-                    bubble.style.left = Math.random() * 100 + '%';
-                    bubble.style.animationDuration = (4 + Math.random() * 4) + 's';
-                    b.appendChild(bubble);
-                    setTimeout(() => bubble.remove(), 8000);
-                }
-
+                
+                let bub = document.createElement('div'); bub.className='stream-bubble';
+                bub.style.left = Math.random()*100+'%';
+                let s = 10 + Math.random()*40;
+                bub.style.width=s+'px'; bub.style.height=s+'px';
+                bub.style.animationDuration = (8+Math.random()*10)+'s';
+                b.appendChild(bub); setTimeout(()=>bub.remove(), 18000);
+            
             } else if (m === 'pink') {
-                let el = document.createElement('div'); el.className='zzz'; 
+                let el = document.createElement('div');
+                el.className = 'zzz';
                 el.textContent = 'z';
-                el.style.left = (48 + Math.random()*5) + '%'; 
-                el.style.top = '40%';
-                f.appendChild(el); setTimeout(()=>el.remove(), 4000);
+                el.style.left = '100px'; 
+                el.style.top = '20px';
+                document.getElementById('bobbyBox').appendChild(el);
+                setTimeout(()=>el.remove(), 4000);
             }
+        }, intervalDelay); // Utilisation de la vitesse dynamique
 
-        }, m === 'rain' || m === 'storm' ? 100 : 
-           m === 'stream' ? 400 :
-           m === 'pink' ? 1000 : 600); 
-
-        if (m === 'wind') box.classList.add('sway-active');
+        if (m === 'wind') {
+            box.classList.add('sway-active');
+        }
     }
 
-    document.getElementById('timerSelect').addEventListener('change', () => { 
+    document.getElementById('modeSelect').addEventListener('change', async (e) => {
         if (isPlaying) {
-            const s = document.getElementById('timerSelect');
-            let mins = parseInt(s.value);
-            if (mins > 0) {
-                endTime = Date.now() + (mins * 60 * 1000);
-                startTimerLoop();
-            } else {
-                clearInterval(countdownInterval);
-                resetTimerLabels();
-            }
+            const newMode = e.target.value;
+            await startAudio(newMode);
+            updateVisuals(); 
+            updateMediaSession(newMode);
         }
     });
 
-    document.getElementById('modeSelect').addEventListener('change', () => { 
-        if(isPlaying) {
-            const mode = document.getElementById('modeSelect').value;
-            updateMediaSession(mode);
-            startAudio(mode);
-            updateVisuals();
-        }
-    });
-    
-    document.getElementById('playBtn').addEventListener('click', () => {
-        if (isPlaying) stopBobby(); else startBobby();
-    });
-    
     document.getElementById('volume').addEventListener('input', (e) => {
-        document.getElementById('volPerc').textContent = Math.round(e.target.value * 100) + "%";
-        updateVolume(e.target.value);
+        const v = parseFloat(e.target.value);
+        document.getElementById('volPerc').textContent = Math.round(v*100) + '%';
+        updateVolume(v);
     });
 
-    displayNewPhrase();
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => { });
+    document.getElementById('playBtn').addEventListener('click', startBobby);
 </script>
 </body>
 </html>
