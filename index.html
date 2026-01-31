@@ -170,8 +170,8 @@
         </div>
     </div>
 <audio id="silentPlayer" loop style="display:none;">
-        <source src="data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD//////////////////////////////////////////////////////////////////wAAADFMYXZjNTguNTQAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA" type="audio/mpeg">
-    </audio>
+    <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA" type="audio/wav">
+</audio>
 <script>
     // --- CONFIGURATION ---
     const phrases = [
@@ -219,7 +219,7 @@
         Array.from(s.options).forEach(o => o.text = o.getAttribute('data-base')); 
     }
 
-    // --- MOTEUR AUDIO ---
+    // --- MOTEUR AUDIO (WEB AUDIO API) ---
     async function initAudio() {
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -329,7 +329,8 @@
         }
     }
 
-    // --- MEDIA SESSION & START ---
+    // --- LOGIQUE PRINCIPALE & NOTIFICATIONS ---
+
     function updateMediaSession(modeKey) {
         if ('mediaSession' in navigator) {
             const modeNames = {
@@ -345,9 +346,11 @@
                 artwork: [{ src: 'icon.png', sizes: '512x512', type: 'image/png' }]
             });
 
-            navigator.mediaSession.setActionHandler('play', startBobby);
-            navigator.mediaSession.setActionHandler('pause', stopBobby);
+            navigator.mediaSession.setActionHandler('play', () => { if(!isPlaying) startBobby(); });
+            navigator.mediaSession.setActionHandler('pause', () => { if(isPlaying) stopBobby(); });
             navigator.mediaSession.setActionHandler('stop', stopBobby);
+            
+            // État lecture
             navigator.mediaSession.playbackState = "playing";
         }
     }
@@ -358,26 +361,28 @@
             return;
         }
 
-        // 1. ACTIVER LE LECTEUR SILENCIEUX HTML (PRIORITAIRE)
+        // 1. Démarrer le son silencieux (Must be done on user click)
         const silentPlayer = document.getElementById('silentPlayer');
         try {
             await silentPlayer.play();
-        } catch(e) { console.log("Silent play prevented"); }
-
-        // 2. DÉCLARER LA SESSION IMMÉDIATEMENT (Pour éviter la notif "URL")
-        const mode = document.getElementById('modeSelect').value;
-        updateMediaSession(mode);
+        } catch(e) {
+            console.error("Erreur lecture silencieuse:", e);
+        }
 
         isPlaying = true;
         displayNewPhrase();
         document.getElementById('playBtn').innerHTML = ""; 
         document.getElementById('bobbyBox').classList.add('playing');
         
-        // 3. CHARGER LES VRAIS SONS APRÈS
+        // 2. Mettre à jour l'interface Media (APRÈS le play)
+        const mode = document.getElementById('modeSelect').value;
+        updateMediaSession(mode);
+
+        // 3. Lancer le moteur audio complexe
         await startAudio(mode);
         updateVisuals();
 
-        // Minuteur
+        // 4. Minuteur
         const s = document.getElementById('timerSelect');
         const selectedOption = s.options[s.selectedIndex];
         let mins = parseInt(s.value);
@@ -399,10 +404,9 @@
     function stopBobby() {
         isPlaying = false;
         
-        // On coupe le lecteur silencieux
+        // Pause le lecteur silencieux
         const silentPlayer = document.getElementById('silentPlayer');
         silentPlayer.pause();
-        silentPlayer.currentTime = 0;
 
         stopAudio(true);
         document.getElementById('bobbyBox').classList.remove('playing', 'sway-active');
@@ -416,7 +420,7 @@
         resetTimerLabels();
     }
 
-    // --- VISUEL ET LOGIQUE ---
+    // --- VISUEL ---
     function updateVisuals() {
         const f = document.getElementById('animContainer'), b = document.getElementById('bgAnimContainer'), m = document.getElementById('modeSelect').value;
         f.innerHTML = ''; b.innerHTML = ''; clearInterval(visualInterval);
@@ -449,7 +453,7 @@
     // EVENT LISTENERS
     document.getElementById('timerSelect').addEventListener('change', () => { if (isPlaying) startBobby(); });
     document.getElementById('playBtn').addEventListener('click', () => startBobby());
-    document.getElementById('modeSelect').addEventListener('change', () => isPlaying && startBobby());
+    document.getElementById('modeSelect').addEventListener('change', () => { if(isPlaying) startBobby(); });
     document.getElementById('volume').addEventListener('input', (e) => {
         document.getElementById('volPerc').textContent = Math.round(e.target.value * 100) + "%";
         updateVolume(e.target.value);
