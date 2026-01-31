@@ -34,7 +34,6 @@
         }
         #riverParallaxContainer.active { display: block; opacity: 1; }
 
-        /* REFLET SUPPRIMÉ */
         #riverParallaxContainer::after { display: none; }
 
         .river-layer {
@@ -43,7 +42,6 @@
             animation: parallaxMove linear infinite;
         }
 
-        /* HAUTEURS CORRIGÉES (RIVIÈRE BASSE) */
         .layer-1 { bottom: 0; height: 35vh; opacity: 0.4; animation-duration: 70s; z-index: 1; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,20 C300,25 600,15 900,22 1200,20 L1200,120 L0,120 Z' fill='%230a0f1d'/%3E%3C/svg%3E"); }
         .layer-2 { bottom: -1vh; height: 33vh; opacity: 0.45; animation-duration: 60s; z-index: 2; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,22 C250,32 550,12 850,28 1200,22 L1200,120 L0,120 Z' fill='%230e1525'/%3E%3C/svg%3E"); }
         .layer-3 { bottom: -2vh; height: 31vh; opacity: 0.5; animation-duration: 50s; z-index: 3; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,25 C400,15 800,35 1200,25 L1200,120 L0,120 Z' fill='%23131c31'/%3E%3C/svg%3E"); }
@@ -535,9 +533,7 @@
         
         const box = document.getElementById('bobbyBox');
         
-        // RESET DU BALANCEMENT
         box.classList.remove('sway-active');
-        
         document.getElementById('bChest').style.filter = "none";
         document.querySelector('.card').classList.remove('lightning-active'); 
 
@@ -578,7 +574,6 @@
             }
         }
 
-        // --- POINT 4 : VITESSE DYNAMIQUE IMPLÉMENTÉE ICI ---
         const intervalDelay = 
             (m === 'rain' || m === 'storm') ? 100 : 
             (m === 'stream') ? 400 :
@@ -633,7 +628,7 @@
                 document.getElementById('bobbyBox').appendChild(el);
                 setTimeout(()=>el.remove(), 4000);
             }
-        }, intervalDelay); // Utilisation de la vitesse dynamique
+        }, intervalDelay);
 
         if (m === 'wind') {
             box.classList.add('sway-active');
