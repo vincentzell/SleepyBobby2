@@ -171,6 +171,16 @@
     </div>
 
  <script>
+ // --- VARIABLES GLOBALES ---
+let visualInterval, countdownInterval, fxInterval;
+let isPlaying = false;
+let audioCtx, masterGain, currentSource;
+let audioBuffers = {}; 
+let endTime = 0;
+
+// NOUVEAU : Le "leurre" pour activer les notifications
+const silentAudio = new Audio("data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD//////////////////////////////////////////////////////////////////wAAADFMYXZjNTguNTQAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA//OEAAABAAAAAgAAAAAAAAAAAAAA");
+silentAudio.loop = true;
     // --- CONFIGURATION ---
     const phrases = [
         "Bobby ébouriffe ses plumes pour te border.", "Chut... Bobby troque son chant contre un doux murmure.",
@@ -391,24 +401,35 @@
         else document.getElementById('bobbyBox').classList.remove('sway-active');
     }
 
-    async function startBobby() {
+async function startBobby() {
         if(isPlaying) stopBobby(); 
         
+        // 1. On lance le leurre silencieux pour forcer la notification
+        try {
+            await silentAudio.play();
+        } catch (e) {
+            console.warn("Autoplay bloqué (interaction requise)", e);
+        }
+
         isPlaying = true;
         displayNewPhrase();
-        document.getElementById('playBtn').innerHTML = ""; // Ou icône pause
+        document.getElementById('playBtn').innerHTML = ""; 
         document.getElementById('bobbyBox').classList.add('playing');
         
-        await startAudio(document.getElementById('modeSelect').value);
+        // 2. On lance le moteur audio
+        const mode = document.getElementById('modeSelect').value;
+        await startAudio(mode);
         updateVisuals();
 
-        // GESTION MINUTEUR PRÉCISE (Anti-Dérive)
+        // 3. IMPORTANT : On met à jour la notification APRÈS avoir lancé l'audio
+        updateMediaSession(mode);
+
+        // GESTION MINUTEUR PRÉCISE
         const s = document.getElementById('timerSelect');
         const selectedOption = s.options[s.selectedIndex];
         let mins = parseInt(s.value);
 
         if (mins > 0) {
-            // On calcule l'heure de fin absolue
             endTime = Date.now() + (mins * 60 * 1000);
             
             countdownInterval = setInterval(() => {
@@ -426,8 +447,13 @@
         }
     }
 
-    function stopBobby() {
+function stopBobby() {
         isPlaying = false;
+        
+        // On coupe le leurre
+        silentAudio.pause();
+        silentAudio.currentTime = 0; // Remise à zéro
+
         stopAudio(true);
         document.getElementById('bobbyBox').classList.remove('playing', 'sway-active');
         clearInterval(visualInterval);
