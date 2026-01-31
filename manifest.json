@@ -1,12 +1,11 @@
 {
   "name": "Sleepy Bobby",
   "short_name": "Bobby",
-  "description": "Votre compagnon de relaxation et de sommeil.",
   "start_url": "./index.html",
   "display": "standalone",
+  "background_color": "#1e293b",
+  "theme_color": "#1e293b",
   "orientation": "portrait",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
   "icons": [
     {
       "src": "icon.png",
@@ -17,8 +16,12 @@
     {
       "src": "icon.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
+    },
+    {
+      "src": "bobby anim.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
     }
   ]
 }
