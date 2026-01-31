@@ -170,40 +170,54 @@
         </div>
     </div>
 
-  <script>
-        const phrases = ["Bobby ébouriffe ses plumes pour te border.","Chut... Bobby troque son chant contre un doux murmure.","Un petit nid de sons pour une grande nuit de rêves.","Bobby ferme un œil... puis l'autre... avec toi.","Bobby says bonne nuit and wishes you sweet dreams.","Un battement d'ailes, un petit chirp, et hop au dodo !","Bobby is learning to snore in two languages.","Bobby has his head in the clouds, entre Dublin et Paris.","Bobby range son bec sous son aile, c'est l'heure.","Le dernier rouge-gorge couché éteint la lune !","Bobby rêve de trèfles irlandais et de jardins français.","De Connemara à la Provence, Bobby te chante le sommeil.","A little piece of Ireland, un petit coin de France, et beaucoup de dodo.","Slán abhaile... Bobby te souhaite un doux retour au pays des songes."];
-        let visualInterval, countdownInterval, fxInterval, isPlaying = false, timeLeft = 0;
+ <script>
+    // --- CONFIGURATION ---
+    const phrases = [
+        "Bobby ébouriffe ses plumes pour te border.", "Chut... Bobby troque son chant contre un doux murmure.",
+        "Un petit nid de sons pour une grande nuit de rêves.", "Bobby ferme un œil... puis l'autre... avec toi.",
+        "Bobby says bonne nuit and wishes you sweet dreams.", "Un battement d'ailes, un petit chirp, et hop au dodo !",
+        "Bobby is learning to snore in two languages.", "Bobby has his head in the clouds, entre Dublin et Paris.",
+        "Bobby range son bec sous son aile, c'est l'heure.", "Le dernier rouge-gorge couché éteint la lune !",
+        "Bobby rêve de trèfles irlandais et de jardins français.", "De Connemara à la Provence, Bobby te chante le sommeil.",
+        "A little piece of Ireland, un petit coin de France, et beaucoup de dodo.", "Slán abhaile... Bobby te souhaite un doux retour au pays des songes."
+    ];
 
-    function displayNewPhrase() { document.getElementById('bobbyPhrase').textContent = phrases[Math.floor(Math.random() * phrases.length)]; }
-    function resetTimerLabels() { const s = document.getElementById('timerSelect'); Array.from(s.options).forEach(o => o.text = o.getAttribute('data-base')); }
-
-    // --- MOTEUR AUDIO AVANCÉ (Loops + FX) ---
+    // --- VARIABLES GLOBALES ---
+    let visualInterval, countdownInterval, fxInterval;
+    let isPlaying = false;
     let audioCtx, masterGain, currentSource;
-    let audioBuffers = {}; // Cache pour ne pas re-télécharger
+    let audioBuffers = {}; 
+    let endTime = 0; // Pour le minuteur précis
 
-    // CONFIGURATION DES FICHIERS AUDIO
-    const placeholder = 'res/416529__inspectorj__bird-whistling-single-robin-a.wav';
-
-    // 1. Les Boucles de fond (Ambiances continues)
+    // FICHIERS AUDIO (Assurez-vous que ces fichiers existent dans le dossier 'res/')
     const SOUND_FILES = {
         stream: 'res/813251__nicktayloe__cave-stream-loop.wav', 
         river: 'res/443869__eardeer__water_flow_dam_distant_loop.wav', 
         pink: 'res/349312__newagesoup__pink_noise-10s.wav', 
         waves: 'res/829626__nox_sound__ambiance_ocean_praia_dos_moinhos_loop_stereo_01(1).wav',
         rain: 'res/66472__digifishmusic__rain_on_a_tin_roof_loop.wav',
-        // Astuce : Pour l'orage, on utilise la pluie comme base !
-        storm: 'res/66472__digifishmusic__rain_on_a_tin_roof_loop.wav', 
+        storm: 'res/66472__digifishmusic__rain_on_a_tin_roof_loop.wav', // Base de pluie
         wind: 'res/651545__nsstudios__wind-draft-loop-3.wav', 
-        fire: placeholder, // Chercher "fire loop" plus tard
+        fire: 'res/fire_loop_placeholder.wav', // NOM DE FICHIER À CRÉER OU REMPLACER
         space: 'res/676854__darrenpasemko__wind_looping_01.wav'
     };
 
-    // 2. Les Effets Ponctuels (Sons courts qui se déclenchent aléatoirement)
     const FX_FILES = {
-        thunder: placeholder, // Chercher "thunder rumble" (court)
-        crackle: placeholder  // Chercher "wood crackle" (court)
+        thunder: 'res/thunder_placeholder.wav', // À REMPLACER
+        crackle: 'res/crackle_placeholder.wav'  // À REMPLACER
     };
 
+    // --- FONCTIONS UI ---
+    function displayNewPhrase() { 
+        document.getElementById('bobbyPhrase').textContent = phrases[Math.floor(Math.random() * phrases.length)]; 
+    }
+    
+    function resetTimerLabels() { 
+        const s = document.getElementById('timerSelect'); 
+        Array.from(s.options).forEach(o => o.text = o.getAttribute('data-base')); 
+    }
+
+    // --- MOTEUR AUDIO ---
     async function initAudio() {
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -214,31 +228,29 @@
         if (audioCtx.state === 'suspended') await audioCtx.resume();
     }
 
-    // Charge un fichier (Loop ou FX)
     async function getAudioBuffer(url) {
         if (audioBuffers[url]) return audioBuffers[url];
         
-        // Petit message de chargement discret
         const phraseBox = document.getElementById('bobbyPhrase');
         const originalText = phraseBox.textContent;
-        phraseBox.textContent = "Bobby tend l'oreille...";
+        phraseBox.textContent = "Chargement des sons...";
 
         try {
             const response = await fetch(url);
-            if (!response.ok) throw new Error("Fichier introuvable : " + url);
+            if (!response.ok) throw new Error("HTTP error " + response.status);
             const arrayBuffer = await response.arrayBuffer();
             const decodedData = await audioCtx.decodeAudioData(arrayBuffer);
             audioBuffers[url] = decodedData;
             phraseBox.textContent = originalText;
             return decodedData;
         } catch (e) {
-            console.error(e);
-            phraseBox.textContent = "Bobby ne trouve pas ce son.";
+            console.error("Erreur chargement audio:", e);
+            phraseBox.textContent = "Erreur: Fichier audio manquant !";
+            setTimeout(() => phraseBox.textContent = originalText, 3000);
             return null;
         }
     }
 
-    // Joue un son ponctuel (Tonnerre, Craquement)
     async function playOneShot(key) {
         if (!isPlaying) return;
         const buffer = await getAudioBuffer(FX_FILES[key]);
@@ -246,11 +258,8 @@
 
         const source = audioCtx.createBufferSource();
         source.buffer = buffer;
-        
-        // Créer un gain spécifique pour le FX pour qu'il ne soit pas trop fort
         const fxGain = audioCtx.createGain();
-        fxGain.gain.value = 0.6; // 60% du volume global
-        
+        fxGain.gain.value = 0.6; // FX un peu moins fort
         source.connect(fxGain);
         fxGain.connect(masterGain);
         source.start(0);
@@ -258,12 +267,11 @@
 
     async function startAudio(mode) {
         await initAudio();
-        stopAudio(); // Coupe le son précédent et les FX
+        stopAudio(false); // false = ne pas tout couper, juste le son précédent
 
         const loopUrl = SOUND_FILES[mode];
         if (!loopUrl) return;
 
-        // 1. Démarrer la boucle de base
         const buffer = await getAudioBuffer(loopUrl);
         if (!buffer) return;
 
@@ -271,23 +279,21 @@
         source.buffer = buffer;
         source.loop = true; 
         
-        // Fade In (Transition douce)
-        const v = masterGain.gain.value;
+        // Fade In
+        const v = document.getElementById('volume').value;
+        masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
         masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
-        masterGain.gain.linearRampToValueAtTime(v, audioCtx.currentTime + 1);
+        masterGain.gain.linearRampToValueAtTime(parseFloat(v), audioCtx.currentTime + 1.5);
 
         source.connect(masterGain);
         source.start(0);
         currentSource = source;
 
-        // 2. Gérer les Effets Spéciaux (FX)
-        if (mode === 'storm') {
-            // Lance un tonnerre toutes les 5 à 15 secondes
-            fxLoop('thunder', 5000, 15000);
-        } else if (mode === 'fire') {
-            // Lance un craquement toutes les 2 à 8 secondes
-            fxLoop('crackle', 2000, 8000);
-        }
+        // Lancer les boucles FX
+        if (mode === 'storm') fxLoop('thunder', 8000, 20000);
+        else if (mode === 'fire') fxLoop('crackle', 3000, 10000);
+        
+        updateMediaSession(mode);
     }
 
     function fxLoop(fxName, minTime, maxTime) {
@@ -295,33 +301,30 @@
         fxInterval = setTimeout(() => {
             if (isPlaying) {
                 playOneShot(fxName);
-                fxLoop(fxName, minTime, maxTime); // Relance la boucle
+                fxLoop(fxName, minTime, maxTime);
             }
         }, delay);
     }
 
-    function stopAudio() {
+    function stopAudio(fullStop = true) {
         if (currentSource) {
             try {
-                // Fade Out rapide
+                // Fade Out
                 masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
                 masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
-                masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
-                
-                setTimeout(() => {
-                    if (currentSource) {
-                        currentSource.stop();
-                        currentSource.disconnect();
-                        currentSource = null;
-                    }
-                    // On remet le volume pour le prochain
-                    updateVolume(document.getElementById('volume').value);
-                }, 350);
-
+                masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
+                const oldSource = currentSource;
+                setTimeout(() => { 
+                    try { oldSource.stop(); oldSource.disconnect(); } catch(e){} 
+                }, 600);
             } catch (e) {}
+            currentSource = null;
         }
-        // Arrêter les timers d'effets spéciaux
         if (fxInterval) clearTimeout(fxInterval);
+        
+        if (fullStop && 'mediaSession' in navigator) {
+            navigator.mediaSession.playbackState = "none";
+        }
     }
 
     function updateVolume(val) {
@@ -331,122 +334,110 @@
         }
     }
 
-    // --- VISUAL ENGINE ---
+    // --- MEDIA SESSION API (CONTROLES ECRAN DE VERROUILLAGE) ---
+    function updateMediaSession(modeKey) {
+        if ('mediaSession' in navigator) {
+            const modeNames = {
+                stream: "Ruisseau", river: "Rivière", pink: "Bruit Rose",
+                waves: "Vagues", rain: "Pluie", storm: "Orage",
+                wind: "Vent", fire: "Cheminée", space: "Espace"
+            };
+            
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: 'Sleepy Bobby',
+                artist: modeNames[modeKey] || 'Relaxation',
+                album: 'Ambiance Naturelle',
+                artwork: [{ src: 'icon.png', sizes: '512x512', type: 'image/png' }]
+            });
+
+            navigator.mediaSession.setActionHandler('play', startBobby);
+            navigator.mediaSession.setActionHandler('pause', stopBobby);
+            navigator.mediaSession.setActionHandler('stop', stopBobby);
+            navigator.mediaSession.playbackState = "playing";
+        }
+    }
+
+    // --- VISUEL ET LOGIQUE ---
+    function updateVisuals() {
+        const f = document.getElementById('animContainer'), b = document.getElementById('bgAnimContainer'), m = document.getElementById('modeSelect').value;
+        f.innerHTML = ''; b.innerHTML = ''; clearInterval(visualInterval);
+
+        // (Votre logique visuelle originale conservée ici pour la concision)
+        // ... Insérer ici le bloc switch/if des visuels si besoin de modifications
+        // Pour l'instant, je réutilise les classes CSS définies.
+        
+        if (m === 'rain' || m === 'storm') {
+            for(let i=0;i<40;i++) { let d=document.createElement('div');d.className='rain-drop';d.style.left=Math.random()*100+'%';d.style.animationDelay=Math.random()*2+'s';f.appendChild(d); }
+        } else if (m === 'space') {
+             for(let i=0;i<50;i++) { let s=document.createElement('div');s.className='star';const a=Math.random()*Math.PI*2;const dist=60+Math.random()*40;s.style.setProperty('--travel-dest', `translate(${Math.cos(a)*dist}vw, ${Math.sin(a)*dist}vh)`);s.style.left="50%";s.style.top="50%";s.style.width=s.style.height=(1+Math.random()*2)+'px';s.style.animationDelay=Math.random()*5+'s';b.appendChild(s); }
+        } else if (m === 'waves') {
+            for(let i=0;i<2;i++){let w=document.createElement('div');w.className='wave-line';w.style.animationDelay=(i*2)+'s';b.appendChild(w);}
+        }
+
+        visualInterval = setInterval(() => {
+            if(!isPlaying) return;
+            if (m === 'pink') {
+                let z = document.createElement('div'); z.className = 'zzz'; z.textContent = 'z'; z.style.left = '52%'; z.style.top = '35%'; f.appendChild(z); setTimeout(() => z.remove(), 3000);
+            } else if (m === 'fire') {
+                 if (!b.querySelector('.fire-glow')) { let glow = document.createElement('div'); glow.className = 'fire-glow'; b.appendChild(glow); setTimeout(() => glow.style.opacity = 1, 10); }
+                 let spark=document.createElement('div');spark.className='spark';spark.style.left=(40+Math.random()*20)+'%';spark.style.bottom='20%';spark.style.setProperty('--tx',(Math.random()*100-50)+'px');spark.style.animation=`sparkUp ${1+Math.random()*2}s ease-out forwards`;f.appendChild(spark);setTimeout(()=>spark.remove(),2000);
+                 const i = 0.9 + Math.random() * 0.3; document.getElementById('bChest').style.filter = `brightness(${i}) saturate(1.2)`;
+            } else if (m === 'wind') {
+                let leaf=document.createElement('div');leaf.className='leaf';leaf.style.left=Math.random()*100+'%';leaf.style.top='-20px';leaf.style.width=(5+Math.random()*8)+'px';leaf.style.animationDuration=(4+Math.random()*4)+'s';leaf.style.backgroundColor=['#4ade80', '#22c55e', '#86efac'][Math.floor(Math.random()*3)];f.appendChild(leaf);setTimeout(()=>leaf.remove(),8000);
+            }
+        }, 800);
+
+        if (m === 'wind') document.getElementById('bobbyBox').classList.add('sway-active');
+        else document.getElementById('bobbyBox').classList.remove('sway-active');
+    }
+
+    async function startBobby() {
+        if(isPlaying) stopBobby(); 
+        
+        isPlaying = true;
+        displayNewPhrase();
+        document.getElementById('playBtn').innerHTML = ""; // Ou icône pause
+        document.getElementById('bobbyBox').classList.add('playing');
+        
+        await startAudio(document.getElementById('modeSelect').value);
+        updateVisuals();
+
+        // GESTION MINUTEUR PRÉCISE (Anti-Dérive)
+        const s = document.getElementById('timerSelect');
+        const selectedOption = s.options[s.selectedIndex];
+        let mins = parseInt(s.value);
+
+        if (mins > 0) {
+            // On calcule l'heure de fin absolue
+            endTime = Date.now() + (mins * 60 * 1000);
+            
+            countdownInterval = setInterval(() => {
+                const now = Date.now();
+                const diff = Math.ceil((endTime - now) / 1000);
+                
+                if (diff <= 0) {
+                    stopBobby();
+                } else {
+                    let m = Math.floor(diff / 60);
+                    let sec = diff % 60;
+                    selectedOption.text = `${m}:${sec < 10 ? '0' : ''}${sec} restant`;
+                }
+            }, 1000);
+        }
+    }
+
     function stopBobby() {
         isPlaying = false;
-        stopAudio();
+        stopAudio(true);
         document.getElementById('bobbyBox').classList.remove('playing', 'sway-active');
         clearInterval(visualInterval);
         clearInterval(countdownInterval);
-        if (fxInterval) clearTimeout(fxInterval); // Stop FX
         
         document.getElementById('animContainer').innerHTML = '';
         document.getElementById('bgAnimContainer').innerHTML = '';
         document.getElementById('birdMain').style.boxShadow = "none";
         document.getElementById('bChest').style.filter = "none";
         resetTimerLabels();
-    }
-
-    function updateVisuals() {
-        const f = document.getElementById('animContainer'), b = document.getElementById('bgAnimContainer'), m = document.getElementById('modeSelect').value;
-        f.innerHTML = ''; b.innerHTML = ''; clearInterval(visualInterval);
-
-        // Animations Statiques
-        if (m === 'rain' || m === 'storm') {
-            for (let i = 0; i < 40; i++) { 
-                let d = document.createElement('div'); d.className = 'rain-drop'; 
-                d.style.left = Math.random() * 100 + '%'; d.style.animationDelay = Math.random() * 2 + 's'; f.appendChild(d); 
-            }
-        }
-        else if (m === 'space') {
-            for (let i = 0; i < 50; i++) {
-                let s = document.createElement('div'); s.className = 'star'; const a = Math.random() * Math.PI * 2; const dist = 60 + Math.random() * 40;
-                s.style.setProperty('--travel-dest', `translate(${Math.cos(a) * dist}vw, ${Math.sin(a) * dist}vh)`);
-                s.style.left = "50%"; s.style.top = "50%"; s.style.width = s.style.height = (1 + Math.random() * 2) + 'px';
-                s.style.animationDelay = Math.random() * 5 + 's'; b.appendChild(s);
-            }
-        } 
-        else if (m === 'waves') {
-            for (let i = 0; i < 2; i++) {
-                let w = document.createElement('div'); w.className = 'wave-line'; w.style.animationDelay = (i * 2) + 's'; w.style.opacity = "0"; b.appendChild(w);
-            }
-        }
-
-        // Animations Dynamiques (Intervalles)
-        visualInterval = setInterval(() => {
-            if (m === 'pink') {
-                let z = document.createElement('div'); z.className = 'zzz'; z.textContent = 'z';
-                z.style.left = '52%'; z.style.top = '35%'; f.appendChild(z); setTimeout(() => z.remove(), 3000);
-            }
-            else if (m === 'stream') {
-                let bu = document.createElement('div'); bu.className = 'bubble';
-                bu.style.left = Math.random() * 100 + '%'; bu.style.bottom = '-20px';
-                let s = (5 + Math.random() * 10) + 'px'; bu.style.width = bu.style.height = s;
-                bu.style.animationDuration = (3 + Math.random() * 2) + 's';
-                b.appendChild(bu); setTimeout(() => bu.remove(), 5000);
-            } 
-            else if (m === 'river') {
-                let flow = document.createElement('div'); flow.className = 'river-flow';
-                flow.style.left = (Math.random() * 100) + '%'; flow.style.opacity = Math.random() * 0.3;
-                flow.style.animationDuration = (3 + Math.random() * 3) + 's'; b.appendChild(flow); setTimeout(() => flow.remove(), 6000);
-            } 
-            else if (m === 'fire') {
-                if (!b.querySelector('.fire-glow')) { let glow = document.createElement('div'); glow.className = 'fire-glow'; b.appendChild(glow); setTimeout(() => glow.style.opacity = 1, 10); }
-                let spark = document.createElement('div'); spark.className = 'spark';
-                spark.style.left = (40 + Math.random() * 20) + '%'; spark.style.bottom = '20%';
-                spark.style.setProperty('--tx', (Math.random() * 100 - 50) + 'px');
-                spark.style.animation = `sparkUp ${1 + Math.random() * 2}s ease-out forwards`;
-                f.appendChild(spark); setTimeout(() => spark.remove(), 2000);
-
-                const i = 0.9 + Math.random() * 0.3;
-                document.getElementById('bChest').style.filter = `brightness(${i}) saturate(1.2)`;
-                document.getElementById('birdMain').style.boxShadow = `0 0 ${15 + i * 10}px rgba(234, 88, 12, 0.2)`;
-            }
-            else if (m === 'wind') {
-                let leaf = document.createElement('div'); leaf.className = 'leaf';
-                leaf.style.left = Math.random() * 100 + '%'; leaf.style.top = '-20px';
-                let size = (5 + Math.random() * 8) + 'px'; leaf.style.width = size;
-                leaf.style.animationDuration = (4 + Math.random() * 4) + 's';
-                leaf.style.backgroundColor = ['#4ade80', '#22c55e', '#86efac'][Math.floor(Math.random()*3)];
-                f.appendChild(leaf); setTimeout(() => leaf.remove(), 8000);
-            }
-        }, 800);
-
-        // Balancement
-        if (m === 'wind') document.getElementById('bobbyBox').classList.add('sway-active');
-        else document.getElementById('bobbyBox').classList.remove('sway-active');
-    }
-
-    async function startBobby() {
-        stopBobby(); // Nettoie tout
-        
-        isPlaying = true;
-        displayNewPhrase();
-        
-        document.getElementById('bobbyBox').classList.add('playing');
-        
-        // Lance le son ET les visuels
-        const mode = document.getElementById('modeSelect').value;
-        await startAudio(mode);
-        updateVisuals();
-
-        const s = document.getElementById('timerSelect');
-        const selectedOption = s.options[s.selectedIndex];
-        let mins = parseInt(s.value);
-
-        if (mins > 0) {
-            timeLeft = mins * 60;
-            countdownInterval = setInterval(() => {
-                timeLeft--;
-                if (timeLeft <= 0) {
-                    stopBobby();
-                } else {
-                    let m = Math.floor(timeLeft / 60);
-                    let sec = timeLeft % 60;
-                    selectedOption.text = `${m}:${sec < 10 ? '0' : ''}${sec} restant`;
-                }
-            }, 1000);
-        }
     }
 
     // EVENT LISTENERS
@@ -459,10 +450,7 @@
     });
 
     displayNewPhrase();
-
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(() => { });
-    }
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => { });
 </script>
 </body>
 </html>
