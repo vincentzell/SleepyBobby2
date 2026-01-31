@@ -1,0 +1,79 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      /* --- COULEURS --- */
+      .card-bg { fill: #1e293b; }
+      .bird-grey { fill: #b8b0a5; }
+      .bird-dark-grey { fill: #8d7e71; }
+      .bird-orange { fill: #e65a28; }
+      .branch-brown { fill: #8b5d43; }
+      .beak-yellow { fill: #f1c40f; }
+      .eye-closed { stroke: #1a1a1a; stroke-width: 2; stroke-linecap: round; }
+      
+      /* --- STYLE DES ZZZ --- */
+      .zzz-pink { 
+        fill: #fb7185; 
+        font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; 
+        font-weight: 900; 
+        opacity: 0; /* Caché au départ */
+      }
+
+      /* --- DÉFINITION DE L'ANIMATION --- */
+      @keyframes floatUp {
+        0% {
+          opacity: 0;
+          transform: translateY(0) rotate(-5deg);
+        }
+        30% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(-20px) rotate(5deg);
+        }
+      }
+
+      /* --- APPLICATION DE L'ANIMATION --- */
+      /* On cible chaque Z (nth-of-type) pour décaler le timing */
+      .zzz-pink:nth-of-type(1) {
+        animation: floatUp 2.5s infinite ease-in-out;
+        animation-delay: 0s;
+      }
+      .zzz-pink:nth-of-type(2) {
+        animation: floatUp 2.5s infinite ease-in-out;
+        animation-delay: 0.8s;
+      }
+      .zzz-pink:nth-of-type(3) {
+        animation: floatUp 2.5s infinite ease-in-out;
+        animation-delay: 1.6s;
+      }
+    </style>
+
+    <path id="bobby-body-shape-sleep" d="M 55, 90 A 45 50 0 0 1 145 90 L 145 95 A 40.5 45 0 0 1 100 140 A 40.5 45 0 0 1 55 95 Z" />
+    <clipPath id="body-clip-sleep"><use href="#bobby-body-shape-sleep" /></clipPath>
+  </defs>
+
+  <rect class="card-bg" width="200" height="200" />
+
+  <text class="zzz-pink" x="140" y="70" font-size="24">Z</text>
+  <text class="zzz-pink" x="160" y="50" font-size="18">Z</text>
+  <text class="zzz-pink" x="175" y="35" font-size="14">Z</text>
+
+  <path class="bird-grey" d="M87.5,115 h25 v30 a10,10 0 0,1 -10,10 h-5 a10,10 0 0,1 -10,-10 Z" />
+
+  <g clip-path="url(#body-clip-sleep)">
+    <rect class="bird-grey" x="55" y="40" width="90" height="100" />
+    <path class="bird-dark-grey" d="M73,40 h54 v10 a15,15 0 0,1 -15,15 h-24 a15,15 0 0,1 -15,-15 Z" />
+    <circle class="bird-orange" cx="100" cy="95" r="35" />
+  </g>
+
+  <line class="eye-closed" x1="77.5" y1="78" x2="84.5" y2="78" />
+  <line class="eye-closed" x1="115.5" y1="78" x2="122.5" y2="78" />
+  
+  <path class="beak-yellow" d="M95,82 h10 L100,89 Z" />
+
+  <rect class="bird-dark-grey" x="84.5" y="130" width="8" height="12" rx="3" />
+  <rect class="bird-dark-grey" x="107.5" y="130" width="8" height="12" rx="3" />
+  <rect class="branch-brown" x="30" y="133" width="140" height="12" rx="6" />
+
+</svg>
