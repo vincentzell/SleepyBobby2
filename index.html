@@ -345,7 +345,7 @@ silentAudio.loop = true;
     }
 
     // --- MEDIA SESSION API (CONTROLES ECRAN DE VERROUILLAGE) ---
-    function updateMediaSession(modeKey) {
+function updateMediaSession(modeKey) {
         if ('mediaSession' in navigator) {
             const modeNames = {
                 stream: "Ruisseau", river: "Rivière", pink: "Bruit Rose",
@@ -357,14 +357,33 @@ silentAudio.loop = true;
                 title: 'Sleepy Bobby',
                 artist: modeNames[modeKey] || 'Relaxation',
                 album: 'Ambiance Naturelle',
-                artwork: [{ src: 'icon.png', sizes: '512x512', type: 'image/png' }]
+                artwork: [
+                    { src: 'icon.png', sizes: '192x192', type: 'image/png' },
+                    { src: 'icon.png', sizes: '512x512', type: 'image/png' }
+                ]
             });
 
+            // Ces 4 actions sont obligatoires pour Android/iOS
             navigator.mediaSession.setActionHandler('play', startBobby);
             navigator.mediaSession.setActionHandler('pause', stopBobby);
             navigator.mediaSession.setActionHandler('stop', stopBobby);
+            
+            // Permet de passer au son suivant/précédent (optionnel mais sympa)
+            navigator.mediaSession.setActionHandler('previoustrack', () => changeMode(-1));
+            navigator.mediaSession.setActionHandler('nexttrack', () => changeMode(1));
+
             navigator.mediaSession.playbackState = "playing";
         }
+    }
+
+    // Petite fonction utilitaire pour changer de son depuis l'écran de verrouillage
+    function changeMode(direction) {
+        const sel = document.getElementById('modeSelect');
+        let newIndex = sel.selectedIndex + direction;
+        if (newIndex < 0) newIndex = sel.options.length - 1;
+        if (newIndex >= sel.options.length) newIndex = 0;
+        sel.selectedIndex = newIndex;
+        startBobby();
     }
 
     // --- VISUEL ET LOGIQUE ---
