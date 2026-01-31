@@ -43,64 +43,59 @@
         @keyframes sway { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
 
         /* --- ANIMATIONS VISUELLES --- */
+        /* Zzz (Pink Noise) */
         .zzz { position: absolute; color: #fb7185; font-weight: bold; opacity: 0; animation: zMove 3s ease-out forwards; font-size: 32px; left: 50%; top: 35%; }
         @keyframes zMove { 0% { transform: translate(0, 0) scale(0.5); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(60px, -120px) scale(1.5); opacity: 0; } }
         
-        .bubble { position: absolute; background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 50%; animation: bubbleUp 6s ease-in forwards; }
-        @keyframes bubbleUp { 0% { transform: translateY(0) scale(0.3); opacity: 0; } 15% { opacity: 0.6; } 100% { transform: translateY(-110vh) scale(1.2); opacity: 0; } }
+        /* Vagues (Waves) */
+        .wave-line { 
+            position: absolute; left: 0; width: 200%; height: 100px; 
+            background: linear-gradient(0deg, rgba(56, 189, 248, 0.2), transparent);
+            border-top: 2px solid rgba(56, 189, 248, 0.3);
+            border-radius: 50% 50% 0 0;
+            bottom: -50px; opacity: 0; 
+            animation: waveFlow 10s ease-in-out infinite; 
+        }
+        @keyframes waveFlow { 
+            0% { transform: translateX(0) translateY(0); opacity: 0; } 
+            50% { opacity: 0.6; transform: translateX(-20px) translateY(-20px); } 
+            100% { transform: translateX(-50px) translateY(0); opacity: 0; } 
+        }
 
-        .wave-line { position: absolute; left: 0; width: 100%; height: 40px; background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.15), transparent); filter: blur(15px); opacity: 0; animation: waveFlow 8s ease-in-out infinite; }
-        @keyframes waveFlow { 0% { bottom: -10%; opacity: 0; } 50% { bottom: 90%; opacity: 0.5; } 100% { bottom: -10%; opacity: 0; } }
-
+        /* Espace (Space) */
         .star { position: absolute; background: white; border-radius: 50%; opacity: 0; animation: starTravel 5s linear infinite; }
         @keyframes starTravel { 0% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 20% { opacity: 1; } 100% { transform: var(--travel-dest) scale(1.5); opacity: 0; } }
 
+        /* Pluie (Rain/Storm) */
         .rain-drop {
             position: absolute;
-            background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.3));
-            width: 1px;
-            height: 60px;
-            animation: fall 0.5s linear infinite;
+            background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.4));
+            width: 2px; height: 60px;
+            animation: fall 0.6s linear infinite;
         }
         @keyframes fall { to { transform: translateY(110vh); } }
         
-        .river-flow {
-            position: absolute;
-            bottom: -150px;
-            width: 2px;
-            height: 150px;
-            background: linear-gradient(0deg, transparent, rgba(56, 189, 248, 0.4), transparent);
-            border-radius: 2px;
-            filter: blur(2px);
-            animation: flowUp linear forwards;
-        }
+        /* Vent (Wind) */
         .leaf {
-            position: absolute;
-            width: 10px;
-            height: 15px;
-            background: #4ade80;
-            border-radius: 10px 0 10px 0;
-            opacity: 0.8;
-            pointer-events: none;
-            filter: blur(0.5px);
+            position: absolute; width: 10px; height: 15px;
+            background: #4ade80; border-radius: 10px 0 10px 0;
+            opacity: 0.8; pointer-events: none;
             animation: leafFall linear forwards;
         }
-
         @keyframes leafFall {
             0% { transform: translate(-50px, -50px) rotate(0deg); opacity: 0; }
-            20% { opacity: 0.6; }
+            20% { opacity: 0.8; }
             100% { transform: translate(calc(100vw + 50px), calc(100vh + 50px)) rotate(720deg); opacity: 0; }
         }
-        @keyframes flowUp { to { transform: translateY(calc(-100vh - 150px)); } }
 
-        /* Étincelles */
+        /* Feu & Ruisseau (Particles) */
         .spark {
             position: absolute; width: 4px; height: 4px; background: #fb923c; border-radius: 50%;
-            filter: blur(1px); box-shadow: 0 0 10px #ea580c; animation: sparkUp 3s ease-out forwards;
+            filter: blur(1px); box-shadow: 0 0 5px currentColor; animation: sparkUp 3s ease-out forwards;
         }
         @keyframes sparkUp {
-            0% { transform: translate(0, 0) scale(1); opacity: 1; }
-            100% { transform: translate(calc(Math.random() * 100px - 50px), -200px) scale(0); opacity: 0; }
+            0% { transform: translate(0, 0) scale(1); opacity: 0.8; }
+            100% { transform: translate(calc(Math.random() * 80px - 40px), -150px) scale(0); opacity: 0; }
         }
         .fire-glow {
             position: absolute; inset: 0; background: radial-gradient(circle at 50% 80%, rgba(234, 88, 12, 0.15), transparent 70%);
@@ -116,7 +111,7 @@
 </head>
 <body>
     <div class="anim-container" id="bgAnimContainer"></div> 
-    <div class="anim-container" id="animContainer"></div>   
+    <div class="anim-container" id="animContainer"></div>    
     <div class="container">
         <div class="card">
             <h2 style="margin:0;">Sleepy Bobby</h2>
@@ -192,12 +187,11 @@
     let endTime = 0;
 
     // FICHIERS AUDIO
-    // IMPORTANT : Ces fichiers DOIVENT être dans le dossier 'res' sur GitHub
     const SOUND_FILES = {
         stream: 'res/813251__nicktayloe__cave-stream-loop.wav', 
         river: 'res/443869__eardeer__water_flow_dam_distant_loop.wav', 
         pink: 'res/349312__newagesoup__pink_noise-10s.wav', 
-        waves: 'res/829626__ocean.wav',
+        waves: 'res/waves.wav', // Assure-toi que c'est bien waves.wav ici !
         rain: 'res/66472__digifishmusic__rain_on_a_tin_roof_loop.wav',
         storm: 'res/66472__digifishmusic__rain_on_a_tin_roof_loop.wav', 
         wind: 'res/651545__nsstudios__wind-draft-loop-3.wav', 
@@ -242,16 +236,10 @@
             console.log("Tentative de chargement : " + url);
             const response = await fetch(url);
             
-            // Vérification stricte : est-ce que le fichier existe ?
-            if (!response.ok) {
-                throw new Error(`Fichier introuvable (${response.status})`);
-            }
+            if (!response.ok) throw new Error(`Fichier introuvable (${response.status})`);
             
-            // Vérification du type de contenu (pour éviter l'erreur DOMException)
             const contentType = response.headers.get("content-type");
-            if (contentType && contentType.includes("text/html")) {
-                throw new Error("Ceci n'est pas un son, c'est une page HTML (probablement une erreur 404)");
-            }
+            if (contentType && contentType.includes("text/html")) throw new Error("Erreur 404 (Fichier non trouvé)");
 
             const arrayBuffer = await response.arrayBuffer();
             const decodedData = await audioCtx.decodeAudioData(arrayBuffer);
@@ -261,8 +249,7 @@
 
         } catch (e) {
             console.error("ERREUR CRITIQUE:", e);
-            // On affiche l'erreur directement à l'écran pour t'aider
-            phraseBox.innerHTML = `<span style="color:#fb7185; font-size:0.8em">Erreur: ${url} n'existe pas sur le serveur !</span>`;
+            phraseBox.innerHTML = `<span style="color:#fb7185; font-size:0.8em">Erreur: ${url} introuvable !</span>`;
             return null;
         }
     }
@@ -372,7 +359,6 @@
             return;
         }
 
-        // 1. Lecteur silencieux HTML (Prioritaire pour notifications)
         const silentPlayer = document.getElementById('silentPlayer');
         try {
             silentPlayer.volume = 1.0; 
@@ -384,15 +370,12 @@
         document.getElementById('playBtn').innerHTML = ""; 
         document.getElementById('bobbyBox').classList.add('playing');
         
-        // 2. Notification Media
         const mode = document.getElementById('modeSelect').value;
         updateMediaSession(mode);
 
-        // 3. Audio Web
         await startAudio(mode);
         updateVisuals();
 
-        // 4. Minuteur
         const s = document.getElementById('timerSelect');
         const selectedOption = s.options[s.selectedIndex];
         let mins = parseInt(s.value);
@@ -437,25 +420,44 @@
         const f = document.getElementById('animContainer'), b = document.getElementById('bgAnimContainer'), m = document.getElementById('modeSelect').value;
         f.innerHTML = ''; b.innerHTML = ''; clearInterval(visualInterval);
 
+        // --- CONFIGURATION INITIALE ---
         if (m === 'rain' || m === 'storm') {
             for(let i=0;i<40;i++) { let d=document.createElement('div');d.className='rain-drop';d.style.left=Math.random()*100+'%';d.style.animationDelay=Math.random()*2+'s';f.appendChild(d); }
         } else if (m === 'space') {
              for(let i=0;i<50;i++) { let s=document.createElement('div');s.className='star';const a=Math.random()*Math.PI*2;const dist=60+Math.random()*40;s.style.setProperty('--travel-dest', `translate(${Math.cos(a)*dist}vw, ${Math.sin(a)*dist}vh)`);s.style.left="50%";s.style.top="50%";s.style.width=s.style.height=(1+Math.random()*2)+'px';s.style.animationDelay=Math.random()*5+'s';b.appendChild(s); }
         } else if (m === 'waves') {
-            for(let i=0;i<2;i++){let w=document.createElement('div');w.className='wave-line';w.style.animationDelay=(i*2)+'s';b.appendChild(w);}
+            for(let i=0;i<3;i++){let w=document.createElement('div');w.className='wave-line';w.style.animationDelay=(i*3)+'s';b.appendChild(w);}
         }
 
+        // --- BOUCLE D'ANIMATION ---
         visualInterval = setInterval(() => {
             if(!isPlaying) return;
+            
             if (m === 'pink') {
                 let z = document.createElement('div'); z.className = 'zzz'; z.textContent = 'z'; z.style.left = '52%'; z.style.top = '35%'; f.appendChild(z); setTimeout(() => z.remove(), 3000);
+            
             } else if (m === 'fire') {
                  if (!b.querySelector('.fire-glow')) { let glow = document.createElement('div'); glow.className = 'fire-glow'; b.appendChild(glow); setTimeout(() => glow.style.opacity = 1, 10); }
-                 let spark=document.createElement('div');spark.className='spark';spark.style.left=(40+Math.random()*20)+'%';spark.style.bottom='20%';spark.style.setProperty('--tx',(Math.random()*100-50)+'px');spark.style.animation=`sparkUp ${1+Math.random()*2}s ease-out forwards`;f.appendChild(spark);setTimeout(()=>spark.remove(),2000);
+                 let spark=document.createElement('div');spark.className='spark';
+                 spark.style.left=(40+Math.random()*20)+'%'; spark.style.bottom='20%';
+                 f.appendChild(spark); setTimeout(()=>spark.remove(),3000);
                  const i = 0.9 + Math.random() * 0.3; document.getElementById('bChest').style.filter = `brightness(${i}) saturate(1.2)`;
+            
             } else if (m === 'wind') {
                 let leaf=document.createElement('div');leaf.className='leaf';leaf.style.left=Math.random()*100+'%';leaf.style.top='-20px';leaf.style.width=(5+Math.random()*8)+'px';leaf.style.animationDuration=(4+Math.random()*4)+'s';leaf.style.backgroundColor=['#4ade80', '#22c55e', '#86efac'][Math.floor(Math.random()*3)];f.appendChild(leaf);setTimeout(()=>leaf.remove(),8000);
+            
+            } else if (m === 'stream' || m === 'river') {
+                // Lucioles bleues / Gouttes
+                let p = document.createElement('div');
+                p.className = 'spark'; 
+                p.style.background = '#60a5fa'; // Bleu clair
+                p.style.boxShadow = "0 0 5px #3b82f6";
+                p.style.width = p.style.height = (2+Math.random()*3)+'px';
+                p.style.left = Math.random()*100+'%';
+                p.style.bottom = '0%';
+                f.appendChild(p); setTimeout(()=>p.remove(), 4000);
             }
+
         }, 800);
 
         if (m === 'wind') document.getElementById('bobbyBox').classList.add('sway-active');
