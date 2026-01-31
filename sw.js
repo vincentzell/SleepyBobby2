@@ -1,10 +1,17 @@
-const CACHE_NAME = 'bobby-sleep-v2'; // J'ai changé en v2 pour forcer la mise à jour
+// --- CONFIGURATION ---
+const CACHE_NAME = 'sleepy-bobby-v3'; // J'ai passé la version à 3 pour forcer la mise à jour
+
 const ASSETS = [
   '/',
   'index.html',
   'manifest.json',
   'icon.png',
-  // Tes fichiers audio configurés dans le HTML :
+  
+  // ⚠️ IMPORTANT : Correspond exactement au nom dans ton HTML
+  // Si tu décides de le renommer 'bobby-anim.svg' plus tard, change-le ici aussi.
+  'bobby-anim.svg', 
+
+  // Tes fichiers audio (Vérifie bien que le dossier s'appelle "res")
   'res/813251__nicktayloe__cave-stream-loop.wav',
   'res/443869__eardeer__water_flow_dam_distant_loop.wav',
   'res/349312__newagesoup__pink_noise-10s.wav',
@@ -17,15 +24,24 @@ const ASSETS = [
   'res/823274__hannagreen__sparks_mediumdensity3.wav'
 ];
 
-// Installation
+// --- 1. INSTALLATION (Mise en cache des fichiers) ---
 self.addEventListener('install', (event) => {
+  // Force le SW à s'activer immédiatement sans attendre la fermeture des onglets
+  self.skipWaiting(); 
+  
   event.waitUntil(
     caches.open(CACHE_NAME)
-    .then((cache) => cache.addAll(ASSETS))
+      .then((cache) => {
+        console.log('[Service Worker] Mise en cache globale');
+        return cache.addAll(ASSETS);
+      })
+      .catch((err) => {
+        console.error('[Service Worker] Erreur pendant le cache. Vérifiez les noms de fichiers !', err);
+      })
   );
 });
 
-// Activation (Nettoyage des vieux caches v1)
+// --- 2. ACTIVATION (Nettoyage des vieux caches) ---
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -34,12 +50,21 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
+  // Permet au SW de contrôler la page immédiatement
+  return self.clients.claim(); 
 });
 
-// Interception réseau (Offline first)
+// --- 3. INTERCEPTION RÉSEAU (Offline First) ---
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request)
-    .then((response) => response || fetch(event.request))
+    caches.match(event.request, { ignoreSearch: true })
+      .then((response) => {
+        // 1. Si le fichier est dans le cache, on le sert (Mode Hors Ligne)
+        if (response) {
+          return response;
+        }
+        // 2. Sinon, on essaie de le télécharger sur le réseau
+        return fetch(event.request);
+      })
   );
 });
