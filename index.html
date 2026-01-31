@@ -169,8 +169,8 @@
             </div>
         </div>
     </div>
-<audio id="silentPlayer" loop preload="auto" style="display:none;">
-    <source src="res/silent.wav" type="audio/wav">
+<audio id="silentPlayer" loop style="display:none;">
+    <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA" type="audio/wav">
 </audio>
 <script>
     // --- CONFIGURATION ---
@@ -192,6 +192,7 @@
     let endTime = 0;
 
     // FICHIERS AUDIO
+    // IMPORTANT : Ces fichiers DOIVENT être dans le dossier 'res' sur GitHub
     const SOUND_FILES = {
         stream: 'res/813251__nicktayloe__cave-stream-loop.wav', 
         river: 'res/443869__eardeer__water_flow_dam_distant_loop.wav', 
@@ -219,7 +220,7 @@
         Array.from(s.options).forEach(o => o.text = o.getAttribute('data-base')); 
     }
 
-    // --- MOTEUR AUDIO (Web Audio API) ---
+    // --- MOTEUR AUDIO ---
     async function initAudio() {
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -238,17 +239,30 @@
         phraseBox.textContent = "Chargement...";
 
         try {
+            console.log("Tentative de chargement : " + url);
             const response = await fetch(url);
-            if (!response.ok) throw new Error("HTTP error " + response.status);
+            
+            // Vérification stricte : est-ce que le fichier existe ?
+            if (!response.ok) {
+                throw new Error(`Fichier introuvable (${response.status})`);
+            }
+            
+            // Vérification du type de contenu (pour éviter l'erreur DOMException)
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("text/html")) {
+                throw new Error("Ceci n'est pas un son, c'est une page HTML (probablement une erreur 404)");
+            }
+
             const arrayBuffer = await response.arrayBuffer();
             const decodedData = await audioCtx.decodeAudioData(arrayBuffer);
             audioBuffers[url] = decodedData;
             phraseBox.textContent = originalText;
             return decodedData;
+
         } catch (e) {
-            console.error(e);
-            phraseBox.textContent = "Erreur audio !";
-            setTimeout(() => phraseBox.textContent = originalText, 2000);
+            console.error("ERREUR CRITIQUE:", e);
+            // On affiche l'erreur directement à l'écran pour t'aider
+            phraseBox.innerHTML = `<span style="color:#fb7185; font-size:0.8em">Erreur: ${url} n'existe pas sur le serveur !</span>`;
             return null;
         }
     }
@@ -269,7 +283,7 @@
 
     async function startAudio(mode) {
         await initAudio();
-        stopAudio(false); // False = ne pas couper la session media
+        stopAudio(false); 
 
         const loopUrl = SOUND_FILES[mode];
         if (!loopUrl) return;
@@ -281,7 +295,6 @@
         source.buffer = buffer;
         source.loop = true; 
         
-        // Fade in
         const v = document.getElementById('volume').value;
         masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
         masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
@@ -317,6 +330,10 @@
             currentSource = null;
         }
         if (fxInterval) clearTimeout(fxInterval);
+        
+        if (fullStop && 'mediaSession' in navigator) {
+            navigator.mediaSession.playbackState = "none";
+        }
     }
 
     function updateVolume(val) {
@@ -326,8 +343,7 @@
         }
     }
 
-    // --- CŒUR DU SYSTÈME (Notifications) ---
-
+    // --- MEDIA SESSION ---
     function updateMediaSession(modeKey) {
         if ('mediaSession' in navigator) {
             const modeNames = {
@@ -343,11 +359,9 @@
                 artwork: [{ src: 'icon.png', sizes: '512x512', type: 'image/png' }]
             });
 
-            // Handlers
             navigator.mediaSession.setActionHandler('play', () => { if(!isPlaying) startBobby(); });
             navigator.mediaSession.setActionHandler('pause', () => { if(isPlaying) stopBobby(); });
             navigator.mediaSession.setActionHandler('stop', stopBobby);
-            
             navigator.mediaSession.playbackState = "playing";
         }
     }
@@ -358,31 +372,27 @@
             return;
         }
 
-        // 1. D'ABORD : On lance le fichier silencieux (c'est lui qui active la notif)
+        // 1. Lecteur silencieux HTML (Prioritaire pour notifications)
         const silentPlayer = document.getElementById('silentPlayer');
         try {
-            // On s'assure que le volume est à 1 (sinon certains OS cachent la notif)
             silentPlayer.volume = 1.0; 
             await silentPlayer.play();
-        } catch(e) {
-            console.error("Erreur lecture silencieuse:", e);
-            // On continue quand même, au cas où
-        }
+        } catch(e) { console.error("Erreur silent player", e); }
 
         isPlaying = true;
         displayNewPhrase();
         document.getElementById('playBtn').innerHTML = ""; 
         document.getElementById('bobbyBox').classList.add('playing');
         
-        // 2. ENSUITE : On configure la notification
+        // 2. Notification Media
         const mode = document.getElementById('modeSelect').value;
         updateMediaSession(mode);
 
-        // 3. ENFIN : On lance les sons de nature
+        // 3. Audio Web
         await startAudio(mode);
         updateVisuals();
 
-        // Gestion du minuteur
+        // 4. Minuteur
         const s = document.getElementById('timerSelect');
         const selectedOption = s.options[s.selectedIndex];
         let mins = parseInt(s.value);
@@ -404,18 +414,13 @@
     function stopBobby() {
         isPlaying = false;
         
-        // On met en pause le lecteur silencieux
         const silentPlayer = document.getElementById('silentPlayer');
         silentPlayer.pause();
-        silentPlayer.currentTime = 0; // Rembobinage
+        silentPlayer.currentTime = 0;
 
-        // On coupe l'audio Web
         stopAudio(true);
         
-        // On dit au système que c'est fini
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.playbackState = "paused";
-        }
+        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
 
         document.getElementById('bobbyBox').classList.remove('playing', 'sway-active');
         clearInterval(visualInterval);
@@ -428,7 +433,6 @@
         resetTimerLabels();
     }
 
-    // --- VISUEL ET EVENTS ---
     function updateVisuals() {
         const f = document.getElementById('animContainer'), b = document.getElementById('bgAnimContainer'), m = document.getElementById('modeSelect').value;
         f.innerHTML = ''; b.innerHTML = ''; clearInterval(visualInterval);
