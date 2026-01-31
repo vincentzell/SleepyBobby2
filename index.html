@@ -42,114 +42,33 @@
         @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
         @keyframes sway { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
 
-        /* --- ANIMATIONS VISUELLES --- */
-        /* Zzz (Pink Noise) */
-        .zzz { position: absolute; color: #fb7185; font-weight: bold; opacity: 0; animation: zMove 3s ease-out forwards; font-size: 32px; left: 50%; top: 35%; }
-        @keyframes zMove { 0% { transform: translate(0, 0) scale(0.5); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(60px, -120px) scale(1.5); opacity: 0; } }
+        /* --- ANIMATIONS SPECIFIQUES --- */
         
-        /* Vagues (Waves) */
+        /* 1. ZZZ (Bruit Rose) - Retour à l'original */
+        .zzz { position: absolute; color: #fb7185; font-weight: bold; opacity: 0; animation: zMove 4s ease-out forwards; font-size: 28px; }
+        @keyframes zMove { 
+            0% { transform: translate(0, 0) scale(0.5); opacity: 0; } 
+            20% { opacity: 1; } 
+            100% { transform: translate(40px, -150px) scale(1.5); opacity: 0; } 
+        }
+
+        /* 2. VAGUES (Waves) - Remontées */
         .wave-line { 
-            position: absolute; left: 0; width: 200%; height: 100px; 
+            position: absolute; left: -10%; width: 120%; height: 120px; 
             background: linear-gradient(0deg, rgba(56, 189, 248, 0.2), transparent);
-            border-top: 2px solid rgba(56, 189, 248, 0.3);
+            border-top: 2px solid rgba(56, 189, 248, 0.4);
             border-radius: 50% 50% 0 0;
-            bottom: -50px; opacity: 0; 
-            animation: waveFlow 10s ease-in-out infinite; 
+            bottom: -20px; /* Remonté pour être plus visible */
+            opacity: 0; 
+            animation: waveFlow 8s ease-in-out infinite; 
         }
         @keyframes waveFlow { 
             0% { transform: translateX(0) translateY(0); opacity: 0; } 
-            50% { opacity: 0.6; transform: translateX(-20px) translateY(-20px); } 
+            50% { opacity: 0.8; transform: translateX(-20px) translateY(-15px); } 
             100% { transform: translateX(-50px) translateY(0); opacity: 0; } 
         }
 
-        /* Espace (Space) */
-        .star { position: absolute; background: white; border-radius: 50%; opacity: 0; animation: starTravel 5s linear infinite; }
-        @keyframes starTravel { 0% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 20% { opacity: 1; } 100% { transform: var(--travel-dest) scale(1.5); opacity: 0; } }
-
-        /* Pluie (Rain/Storm) */
-        .rain-drop {
-            position: absolute;
-            background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.4));
-            width: 2px; height: 60px;
-            animation: fall 0.6s linear infinite;
-        }
-        @keyframes fall { to { transform: translateY(110vh); } }
-        
-        /* Vent (Wind) */
-        .leaf {
-            position: absolute; width: 10px; height: 15px;
-            background: #4ade80; border-radius: 10px 0 10px 0;
-            opacity: 0.8; pointer-events: none;
-            animation: leafFall linear forwards;
-        }
-        @keyframes leafFall {
-            0% { transform: translate(-50px, -50px) rotate(0deg); opacity: 0; }
-            20% { opacity: 0.8; }
-            100% { transform: translate(calc(100vw + 50px), calc(100vh + 50px)) rotate(720deg); opacity: 0; }
-        }
-
-        /* Feu & Ruisseau (Particles) */
-        .spark {
-            position: absolute; width: 4px; height: 4px; background: #fb923c; border-radius: 50%;
-            filter: blur(1px); box-shadow: 0 0 5px currentColor; animation: sparkUp 3s ease-out forwards;
-        }
-        @keyframes sparkUp {
-            0% { transform: translate(0, 0) scale(1); opacity: 0.8; }
-            100% { transform: translate(calc(Math.random() * 80px - 40px), -150px) scale(0); opacity: 0; }
-        }
-        .fire-glow {
-            position: absolute; inset: 0; background: radial-gradient(circle at 50% 80%, rgba(234, 88, 12, 0.15), transparent 70%);
-            opacity: 0; transition: opacity 2s;
-        }
-        
-        /* --- UI --- */
-        .label-row { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: bold; opacity: 0.7; margin-bottom: 5px; }
-        .control-group { text-align: left; margin-top: 18px; }
-        select { width: 100%; padding: 12px; border-radius: 12px; background: #2d3748; border: 1px solid rgba(255,255,255,0.1); color: white; appearance: none; cursor: pointer; }
-        
-        /* --- NOUVEAUX ELEMENTS (Style Vectoriel) --- */
-
-        /* 1. GOUTTES (Pluie/Orage) : Forme de larme */
-        .drop {
-            position: absolute; width: 8px; height: 8px;
-            background: #93c5fd; 
-            border-radius: 0 50% 50% 50%; /* Forme de goutte */
-            transform: rotate(45deg); /* Pointe vers le haut à l'origine, on l'orientera dans l'anim */
-            opacity: 0.8;
-            animation: dropFall 0.8s linear infinite;
-        }
-        @keyframes dropFall {
-            0% { transform: translate(Math.random()*10px, -20px) rotate(45deg); opacity: 0; }
-            20% { opacity: 1; }
-            100% { transform: translate(-10px, 105vh) rotate(45deg); opacity: 0; }
-        }
-
-        /* 2. BRAISES (Feu) : Petits carrés qui tournoient en montant */
-        .ember {
-            position: absolute; width: 6px; height: 6px;
-            background: #fb923c;
-            border-radius: 2px; /* Légèrement arrondi */
-            animation: floatUpRotate 4s linear forwards;
-        }
-
-        /* 3. BULLES (Ruisseau/Rivière/Vagues) : Cercles avec contour */
-        .bubble {
-            position: absolute; width: 8px; height: 8px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            border-radius: 50%;
-            animation: floatUpWobble 5s ease-in infinite;
-        }
-
-        /* 4. PLUMES (Bruit Rose) : Forme allongée douce */
-        .feather {
-            position: absolute; width: 12px; height: 20px;
-            background: #fbcfe8; /* Rose pâle */
-            border-radius: 50% 50% 0 50%; /* Forme asymétrique */
-            animation: leafFall 8s linear forwards; /* On réutilise l'anim des feuilles mais plus lent */
-        }
-
-        /* 5. ASTRES (Espace) : Losanges/Etoiles fixes */
+        /* 3. ESPACE (Space) */
         .astro {
             position: absolute; width: 4px; height: 4px;
             background: white;
@@ -157,19 +76,84 @@
             box-shadow: 0 0 4px white;
             animation: twinkle 3s ease-in-out infinite;
         }
+        @keyframes twinkle { 0%, 100% { opacity: 0.3; transform: scale(0.8) rotate(45deg); } 50% { opacity: 1; transform: scale(1.2) rotate(45deg); } }
 
-        /* ANIMATIONS PARTAGÉES */
+        /* 4. PLUIE (Rain) - Gouttes nettes */
+        .drop {
+            position: absolute; width: 6px; height: 12px;
+            background: #93c5fd; 
+            border-radius: 2px;
+            opacity: 0.7;
+            transform: rotate(10deg);
+            animation: dropFall 0.8s linear infinite;
+        }
+        @keyframes dropFall {
+            0% { transform: translate(0, -20px) rotate(10deg); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translate(-10px, 105vh) rotate(10deg); opacity: 0; }
+        }
+
+        /* 5. VENT (Wind) - Feuilles */
+        .leaf {
+            position: absolute; width: 14px; height: 14px;
+            border-radius: 0 100% 0 100%; /* Forme de feuille */
+            opacity: 0.9; pointer-events: none;
+            animation: leafFall 6s linear forwards;
+        }
+        @keyframes leafFall {
+            0% { transform: translate(-50px, -50px) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            100% { transform: translate(calc(100vw + 50px), calc(100vh + 100px)) rotate(360deg); opacity: 0; }
+        }
+
+        /* 6. FEU (Cheminée) - Braises */
+        .ember {
+            position: absolute; width: 6px; height: 6px;
+            background: #fb923c;
+            border-radius: 2px; 
+            animation: floatUpRotate 4s linear forwards;
+        }
+        .fire-glow {
+            position: absolute; inset: 0; background: radial-gradient(circle at 50% 80%, rgba(234, 88, 12, 0.2), transparent 70%);
+            opacity: 0; transition: opacity 2s;
+        }
         @keyframes floatUpRotate {
             0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(-150px) rotate(360deg); opacity: 0; }
+            100% { transform: translateY(-200px) rotate(180deg); opacity: 0; }
         }
-        @keyframes floatUpWobble {
-            0% { transform: translateX(0) translateY(0); opacity: 0; }
-            20% { opacity: 0.8; }
-            50% { transform: translateX(10px) translateY(-50px); }
-            100% { transform: translateX(-10px) translateY(-100px); opacity: 0; }
+
+        /* 7. RIVIERE (River) - Eau qui coule */
+        .flow-line {
+            position: absolute; height: 2px; background: rgba(255, 255, 255, 0.5);
+            border-radius: 2px;
+            box-shadow: 0 0 4px #38bdf8;
+            animation: flowRight 3s linear infinite;
         }
-        @keyframes twinkle { 0%, 100% { opacity: 0.3; transform: scale(0.8) rotate(45deg); } 50% { opacity: 1; transform: scale(1.2) rotate(45deg); } }
+        @keyframes flowRight {
+            0% { transform: translateX(-100px) scaleX(0.5); opacity: 0; }
+            20% { opacity: 0.8; transform: translateX(0) scaleX(1); }
+            80% { opacity: 0.8; transform: translateX(50vw) scaleX(1); }
+            100% { transform: translateX(calc(100vw + 50px)) scaleX(0.5); opacity: 0; }
+        }
+
+        /* 8. RUISSEAU (Stream) - Particules montantes */
+        .stream-speck {
+            position: absolute; width: 4px; height: 4px;
+            background: #bae6fd; /* Bleu très clair */
+            border-radius: 50%;
+            box-shadow: 0 0 6px #7dd3fc;
+            animation: riseHigh 6s ease-out forwards;
+        }
+        @keyframes riseHigh {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 0.8; }
+            100% { transform: translateY(-75vh) translateX(20px); opacity: 0; } /* Monte haut */
+        }
+        
+        /* UI */
+        .label-row { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: bold; opacity: 0.7; margin-bottom: 5px; }
+        .control-group { text-align: left; margin-top: 18px; }
+        select { width: 100%; padding: 12px; border-radius: 12px; background: #2d3748; border: 1px solid rgba(255,255,255,0.1); color: white; appearance: none; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -254,10 +238,7 @@
         stream: 'res/813251__nicktayloe__cave-stream-loop.wav', 
         river: 'res/443869__eardeer__water_flow_dam_distant_loop.wav', 
         pink: 'res/349312__newagesoup__pink_noise-10s.wav', 
-        
-        // Nom de fichier original restauré :
         waves: 'res/829626__ocean.wav',
-        
         rain: 'res/66472__digifishmusic__rain_on_a_tin_roof_loop.wav',
         storm: 'res/66472__digifishmusic__rain_on_a_tin_roof_loop.wav', 
         wind: 'res/651545__nsstudios__wind-draft-loop-3.wav', 
@@ -497,7 +478,7 @@
         box.classList.remove('sway-active');
         document.getElementById('bChest').style.filter = "none";
 
-        // --- VISUELS STATIQUES (Espace) ---
+        // --- VISUELS STATIQUES DE FOND ---
         if (m === 'space') {
              for(let i=0; i<30; i++) { 
                 let s = document.createElement('div');
@@ -505,16 +486,14 @@
                 s.style.left = Math.random()*100+'%';
                 s.style.top = Math.random()*100+'%';
                 s.style.animationDelay = Math.random()*3+'s';
-                // Varier la taille
                 let scale = 0.5 + Math.random();
                 s.style.width = s.style.height = (4 * scale) + 'px';
                 b.appendChild(s); 
             }
         }
         
-        // --- VISUELS VAGUES (Fond) ---
         if (m === 'waves') {
-            // On garde tes vagues de fond car elles sont jolies
+            // Vagues remontées, plus de bulles
             for(let i=0;i<3;i++){
                 let w=document.createElement('div');
                 w.className='wave-line';
@@ -527,59 +506,61 @@
         visualInterval = setInterval(() => {
             if(!isPlaying) return;
             
-            // 1. VENT (Feuilles) - On garde ton original
+            // 1. VENT (Restauré)
             if (m === 'wind') {
                 let el = document.createElement('div'); el.className='leaf';
                 el.style.left = Math.random()*100+'%'; el.style.top='-20px';
                 el.style.backgroundColor=['#4ade80', '#22c55e', '#86efac'][Math.floor(Math.random()*3)];
-                f.appendChild(el); setTimeout(()=>el.remove(), 8000);
+                f.appendChild(el); setTimeout(()=>el.remove(), 6000);
             
-            // 2. PLUIE / ORAGE (Gouttes stylisées)
+            // 2. PLUIE / ORAGE
             } else if (m === 'rain' || m === 'storm') {
-                // On en crée plusieurs à la fois pour la densité
                 for(let k=0; k<2; k++){
                     let el = document.createElement('div'); el.className='drop';
                     el.style.left = Math.random()*100+'%'; 
                     el.style.top = '-20px';
-                    // Vitesse aléatoire
                     el.style.animationDuration = (0.6 + Math.random()*0.3) + 's';
                     f.appendChild(el); setTimeout(()=>el.remove(), 1000);
                 }
 
-            // 3. FEU (Braises carrées tournantes)
+            // 3. FEU
             } else if (m === 'fire') {
-                 // Lueur de fond
                  if (!b.querySelector('.fire-glow')) { let glow = document.createElement('div'); glow.className = 'fire-glow'; b.appendChild(glow); setTimeout(() => glow.style.opacity = 1, 10); }
-                 
                  let el = document.createElement('div'); el.className='ember';
-                 el.style.left = (45 + Math.random()*10) + '%'; // Centré sur le feu
+                 el.style.left = (45 + Math.random()*10) + '%'; 
                  el.style.bottom = '15%';
-                 // Couleur variant du jaune au rouge
                  el.style.background = ['#fb923c', '#fca5a5', '#fdba74'][Math.floor(Math.random()*3)];
                  f.appendChild(el); setTimeout(()=>el.remove(), 4000);
-                 
-                 // Effet lumière sur Bobby
                  const i = 0.9 + Math.random() * 0.3; document.getElementById('bChest').style.filter = `brightness(${i}) saturate(1.2)`;
             
-            // 4. EAU (Bulles)
-            } else if (m === 'stream' || m === 'river' || m === 'waves') {
-                let el = document.createElement('div'); el.className='bubble';
-                el.style.left = Math.random()*100+'%';
-                el.style.bottom = '-10px';
-                // Taille variable
-                let size = 4 + Math.random()*8;
-                el.style.width = el.style.height = size+'px';
-                f.appendChild(el); setTimeout(()=>el.remove(), 5000);
+            // 4. RIVIERE (Eau qui coule)
+            } else if (m === 'river') {
+                let el = document.createElement('div'); el.className='flow-line';
+                el.style.left = '-100px'; 
+                el.style.top = (60 + Math.random()*40) + '%'; // Partie basse
+                el.style.width = (50 + Math.random()*100) + 'px';
+                f.appendChild(el); setTimeout(()=>el.remove(), 3000);
 
-            // 5. BRUIT ROSE (Plumes douces)
+            // 5. RUISSEAU (Remonté et plus visible)
+            } else if (m === 'stream') {
+                let el = document.createElement('div'); el.className='stream-speck';
+                el.style.left = Math.random()*100+'%';
+                el.style.bottom = '0';
+                f.appendChild(el); setTimeout(()=>el.remove(), 6000);
+
+            // 6. BRUIT ROSE (Restauré zZz)
             } else if (m === 'pink') {
-                let el = document.createElement('div'); el.className='feather';
-                el.style.left = Math.random()*100+'%'; el.style.top='-20px';
-                el.style.animationDuration = '10s'; // Très lent
-                f.appendChild(el); setTimeout(()=>el.remove(), 10000);
+                let el = document.createElement('div'); el.className='zzz'; 
+                el.textContent = 'z';
+                el.style.left = (45 + Math.random()*10) + '%'; 
+                el.style.top = '40%';
+                f.appendChild(el); setTimeout(()=>el.remove(), 4000);
             }
 
-        }, m === 'rain' || m === 'storm' ? 100 : 600); // Pluie plus fréquente, le reste plus lent
+        }, m === 'rain' || m === 'storm' ? 100 : 
+           m === 'stream' ? 400 : // Plus de particules pour le ruisseau
+           m === 'river' ? 300 : // Rivière fluide
+           600); 
 
         // Mouvement de Bobby seulement pour le vent
         if (m === 'wind') box.classList.add('sway-active');
