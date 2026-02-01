@@ -119,7 +119,7 @@
         @keyframes warpDrive {
             0% { transform: translate(-50%, -50%) scale(0.2) rotate(45deg); opacity: 0; }
             10% { opacity: 1; } 
-            100% { transform: translate(var(--dest-x), var(--dest-y)) scale(4) rotate(45deg); opacity: 0; }
+            100% { transform: translate(var(--dest-x), var(--dest-y)) scale(4) rotate(45deg); opacity: 0; } 
         }
 
         .drop {
@@ -253,8 +253,8 @@
             </div>
         </div>
     </div>
-
-    <audio id="mainAudio" loop crossorigin="anonymous"></audio>
+    
+    <audio id="dummyAudio" src="res/silent.wav" loop crossorigin="anonymous"></audio>
 
 <script>
     if ('serviceWorker' in navigator) {
@@ -276,11 +276,13 @@
     let visualInterval, countdownInterval, fxInterval;
     let isPlaying = false;
     let audioCtx, masterGain; 
-    let fxBuffers = {}; 
+    let loopSource = null; 
+    let audioBuffers = {}; 
     let endTime = 0;
     let wakeLock = null;
 
-    const mainAudioPlayer = document.getElementById('mainAudio');
+    // Référence vers l'audio dummy
+    const dummyAudioPlayer = document.getElementById('dummyAudio');
 
     const SOUND_FILES = {
         stream: 'res/813251__nicktayloe__cave-stream-loop.wav', 
@@ -345,13 +347,13 @@
         if (audioCtx.state === 'suspended') await audioCtx.resume();
     }
 
-    async function getFxBuffer(url) {
-        if (fxBuffers[url]) return fxBuffers[url];
+    async function getAudioBuffer(url) {
+        if (audioBuffers[url]) return audioBuffers[url];
         try {
             const response = await fetch(url);
             const arrayBuffer = await response.arrayBuffer();
             const decodedData = await audioCtx.decodeAudioData(arrayBuffer);
-            fxBuffers[url] = decodedData;
+            audioBuffers[url] = decodedData;
             return decodedData;
         } catch (e) { return null; }
     }
@@ -359,7 +361,7 @@
     async function playOneShot(key) {
         if (!isPlaying) return;
         await initAudioContext();
-        const buffer = await getFxBuffer(FX_FILES[key]);
+        const buffer = await getAudioBuffer(FX_FILES[key]);
         if (!buffer) return;
         
         const source = audioCtx.createBufferSource();
@@ -390,15 +392,9 @@
 
     function setupMediaSession() {
         if ('mediaSession' in navigator) {
-            navigator.mediaSession.setActionHandler('play', () => { 
-                startBobby(); 
-            });
-            navigator.mediaSession.setActionHandler('pause', () => { 
-                stopBobby(); 
-            });
-            navigator.mediaSession.setActionHandler('stop', () => stopBobby());
-            navigator.mediaSession.setActionHandler('previoustrack', null);
-            navigator.mediaSession.setActionHandler('nexttrack', null);
+            navigator.mediaSession.setActionHandler('play', startBobby);
+            navigator.mediaSession.setActionHandler('pause', stopBobby);
+            navigator.mediaSession.setActionHandler('stop', stopBobby);
         }
     }
 
@@ -419,7 +415,7 @@
                     { src: 'maskable_icon_x512.png', sizes: '192x192', type: 'image/png' }
                 ]
             });
-
+            
             navigator.mediaSession.playbackState = "playing";
         }
     }
@@ -429,16 +425,31 @@
         
         await initAudioContext();
 
+        // 1. Démarrer la source audio silencieuse (le "leurre" pour le système)
+        // Cela active les contrôles médias et empêche le background kill
+        // On s'assure qu'elle tourne :
+        try {
+            if(dummyAudioPlayer.paused) await dummyAudioPlayer.play();
+        } catch(e) { console.log("Dummy play failed", e); }
+
+
+        // 2. Gérer le VRAI son via WebAudio (boucle parfaite)
+        if (loopSource) {
+            try { loopSource.stop(); } catch(e) {}
+            loopSource = null;
+        }
+
         const url = SOUND_FILES[mode];
         if (url) {
-            mainAudioPlayer.src = url;
-            mainAudioPlayer.volume = document.getElementById('volume').value;
-            
-            try {
-                await mainAudioPlayer.play();
+            const buffer = await getAudioBuffer(url);
+            if(buffer && isPlaying) {
+                loopSource = audioCtx.createBufferSource();
+                loopSource.buffer = buffer;
+                loopSource.loop = true;
+                loopSource.connect(masterGain);
+                loopSource.start(0);
+                
                 updateMediaMetadata(mode);
-            } catch (e) {
-                console.error(e);
             }
         }
 
@@ -446,16 +457,21 @@
         else if (mode === 'fire') fxLoop('crackle', 3000, 10000);
     }
 
-    function stopAudio(fullStop = true) {
-        mainAudioPlayer.pause();
-        if (fxInterval) clearTimeout(fxInterval);
-        if (fullStop && 'mediaSession' in navigator) {
-            navigator.mediaSession.playbackState = "paused";
+    function stopAudio() {
+        // 1. Stopper la boucle parfaite
+        if (loopSource) {
+            try { loopSource.stop(); } catch(e){}
+            loopSource = null;
         }
+        // 2. Stopper le leurre silencieux
+        dummyAudioPlayer.pause();
+        dummyAudioPlayer.currentTime = 0;
+        
+        if (fxInterval) clearTimeout(fxInterval);
+        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
     }
 
     function updateVolume(val) {
-        mainAudioPlayer.volume = val;
         if (masterGain) masterGain.gain.setTargetAtTime(val, audioCtx.currentTime, 0.1);
     }
 
@@ -585,7 +601,7 @@
         const mode = document.getElementById('modeSelect').value;
         
         setupMediaSession();
-        await startAudio(mode);
+        await startAudio(mode); 
         updateVisuals();
 
         const s = document.getElementById('timerSelect');
@@ -601,7 +617,7 @@
         
         if (wakeLock !== null) { wakeLock.release().then(() => wakeLock = null).catch(e=>{}); }
 
-        stopAudio(true); 
+        stopAudio(); 
 
         document.getElementById('bobbyBox').classList.remove('playing', 'sway-active');
         document.querySelector('.card').classList.remove('lightning-active'); 
@@ -618,33 +634,21 @@
         resetTimerLabels();
     }
 
-    mainAudioPlayer.addEventListener('play', () => {
-        if('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
-    });
-
-    mainAudioPlayer.addEventListener('pause', () => {
-        if('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
-    });
-
-    mainAudioPlayer.addEventListener('ended', () => {
-         if(isPlaying) {
-             mainAudioPlayer.currentTime = 0;
-             mainAudioPlayer.play();
-         }
-    });
-
     document.addEventListener("visibilitychange", async () => {
         if (!document.hidden && isPlaying) {
             if (audioCtx && audioCtx.state === 'suspended') await audioCtx.resume();
             if (wakeLock === null) await requestWakeLock();
-            if (mainAudioPlayer.paused) mainAudioPlayer.play();
+            
+            // Si on revient sur la page et que l'audio dummy s'est mis en pause
+            try {
+                if(dummyAudioPlayer.paused) await dummyAudioPlayer.play();
+            } catch(e) {}
         }
     });
 
     document.getElementById('modeSelect').addEventListener('change', async (e) => {
         if (isPlaying) {
             const newMode = e.target.value;
-            updateMediaMetadata(newMode);
             await startAudio(newMode);
             updateVisuals(); 
         }
@@ -670,7 +674,7 @@
     });
 
     document.getElementById('playBtn').addEventListener('click', startBobby);
-	displayNewPhrase();
+    displayNewPhrase(); 
 </script>
 </body>
 </html>
