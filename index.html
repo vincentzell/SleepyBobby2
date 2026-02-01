@@ -317,11 +317,28 @@
         countdownInterval = setInterval(() => {
             const now = Date.now();
             const diff = Math.ceil((endTime - now) / 1000);
-            if (diff <= 0) stopBobby();
-            else {
+            
+            if (diff <= 0) {
+                stopBobby();
+            } else {
                 let m = Math.floor(diff / 60);
                 let sec = diff % 60;
                 selectedOption.text = `${m}:${sec < 10 ? '0' : ''}${sec} restant`;
+
+                if (diff <= 30) {
+                    const startVol = parseFloat(document.getElementById('volume').value);
+                    const newVol = startVol * (diff / 30);
+                    if(masterGain && audioCtx.state === 'running') {
+                        masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+                        masterGain.gain.setValueAtTime(newVol, audioCtx.currentTime);
+                    }
+                } else {
+                    const currentSliderVol = parseFloat(document.getElementById('volume').value);
+                    if(masterGain && Math.abs(masterGain.gain.value - currentSliderVol) > 0.01) {
+                        masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+                        masterGain.gain.setValueAtTime(currentSliderVol, audioCtx.currentTime);
+                    }
+                }
             }
         }, 1000);
     }
@@ -421,13 +438,11 @@
         
         await initAudioContext();
 
-        // 1. Démarrer le leurre silencieux
         try {
             if(dummyAudioPlayer.paused) await dummyAudioPlayer.play();
         } catch(e) { console.log("Dummy play failed", e); }
 
 
-        // 2. Démarrer le son Web Audio (Boucle)
         if (loopSource) {
             try { loopSource.stop(); } catch(e) {}
             loopSource = null;
@@ -439,7 +454,7 @@
             if(buffer && isPlaying) {
                 loopSource = audioCtx.createBufferSource();
                 loopSource.buffer = buffer;
-                loopSource.loop = true; // Web Audio native loop
+                loopSource.loop = true;
                 loopSource.connect(masterGain);
                 loopSource.start(0);
                 
@@ -594,6 +609,14 @@
         const mode = document.getElementById('modeSelect').value;
         
         setupMediaSession();
+        
+        await initAudioContext();
+        const startVol = parseFloat(document.getElementById('volume').value);
+        if(masterGain) {
+             masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+             masterGain.gain.setValueAtTime(startVol, audioCtx.currentTime);
+        }
+
         await startAudio(mode); 
         updateVisuals();
 
@@ -655,6 +678,11 @@
             } else {
                 clearInterval(countdownInterval);
                 resetTimerLabels();
+                const vol = parseFloat(document.getElementById('volume').value);
+                if(masterGain) {
+                    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+                    masterGain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                }
             }
         }
     });
