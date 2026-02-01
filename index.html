@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="apple-touch-icon" href="maskable_icon_x192.png">
     <link rel="icon" type="image/svg+xml" href="bobby-anim.svg">
     <link rel="manifest" href="manifest.json">
     <title>Sleepy Bobby</title>
@@ -259,7 +259,7 @@
 <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log(err));
       });
     }
 
@@ -275,7 +275,7 @@
 
     let visualInterval, countdownInterval, fxInterval;
     let isPlaying = false;
-    let audioCtx, masterGain; // Pour les bruitages (tonnerre, feu) seulement
+    let audioCtx, masterGain; 
     let fxBuffers = {}; 
     let endTime = 0;
     let wakeLock = null;
@@ -310,23 +310,22 @@
 
     async function requestWakeLock() {
         if ('wakeLock' in navigator) {
-            try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
+            try { 
+                wakeLock = await navigator.wakeLock.request('screen');
+            } catch (err) { }
         }
     }
 
-    // Initialisation Audio pour les bruitages (SFX) uniquement
     async function initAudioContext() {
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             masterGain = audioCtx.createGain();
             masterGain.connect(audioCtx.destination);
-            // On sync le volume
             masterGain.gain.value = document.getElementById('volume').value;
         }
         if (audioCtx.state === 'suspended') await audioCtx.resume();
     }
 
-    // Chargement Buffer pour les SFX courts uniquement
     async function getFxBuffer(url) {
         if (fxBuffers[url]) return fxBuffers[url];
         try {
@@ -338,11 +337,9 @@
         } catch (e) { return null; }
     }
 
-    // Jouer un SFX (Tonnerre/Feu) via WebAudio
     async function playOneShot(key) {
         if (!isPlaying) return;
         await initAudioContext();
-        
         const buffer = await getFxBuffer(FX_FILES[key]);
         if (!buffer) return;
         
@@ -362,7 +359,6 @@
         }
     }
 
-    // Gestion de la boucle des SFX
     function fxLoop(fxName, minTime, maxTime) {
         const delay = minTime + Math.random() * (maxTime - minTime);
         fxInterval = setTimeout(() => {
@@ -373,78 +369,79 @@
         }, delay);
     }
 
-    // Démarrage Audio Principal (Balise Audio HTML5)
-    async function startAudio(mode) {
-        // 1. Arrêter les anciens sons
-        stopAudio(false);
-        
-        // 2. Initialiser le contexte pour les SFX potentiels
-        await initAudioContext();
-
-        // 3. Lancer le son principal via balise <audio> (Stream natif)
-        const url = SOUND_FILES[mode];
-        if (url) {
-            mainAudioPlayer.src = url;
-            mainAudioPlayer.volume = document.getElementById('volume').value;
-            try {
-                await mainAudioPlayer.play();
-            } catch (e) {
-                console.error("Autoplay bloqué ou erreur", e);
-            }
-        }
-
-        // 4. Lancer les boucles SFX si besoin
-        if (mode === 'storm') fxLoop('thunder', 8000, 20000);
-        else if (mode === 'fire') fxLoop('crackle', 3000, 10000);
-    }
-
-    function stopAudio(fullStop = true) {
-        // Stop Main Player
-        mainAudioPlayer.pause();
-        // Ne pas remettre à 0 si on change juste de piste pour fluidité, mais ici on pause
-        
-        // Stop SFX Loop
-        if (fxInterval) clearTimeout(fxInterval);
-
-        if (fullStop && 'mediaSession' in navigator) {
-            navigator.mediaSession.playbackState = "none";
+    function setupMediaSession() {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.setActionHandler('play', () => { 
+                startBobby(); 
+            });
+            navigator.mediaSession.setActionHandler('pause', () => { 
+                stopBobby(); 
+            });
+            navigator.mediaSession.setActionHandler('stop', () => stopBobby());
+            navigator.mediaSession.setActionHandler('previoustrack', null);
+            navigator.mediaSession.setActionHandler('nexttrack', null);
         }
     }
 
-    function updateVolume(val) {
-        // Volume Lecteur Principal
-        mainAudioPlayer.volume = val;
-        // Volume SFX
-        if (masterGain) {
-            masterGain.gain.setTargetAtTime(val, audioCtx.currentTime, 0.1);
-        }
-    }
-
-    function updateMediaSession(modeKey) {
+    function updateMediaMetadata(modeKey) {
         if ('mediaSession' in navigator) {
             const modeNames = {
                 stream: "Ruisseau", river: "Rivière", pink: "Bruit Rose",
                 waves: "Vagues", rain: "Pluie", storm: "Orage",
                 wind: "Vent", fire: "Cheminée", space: "Espace"
             };
+            
             navigator.mediaSession.metadata = new MediaMetadata({
-                title: 'Sleepy Bobby',
-                artist: modeNames[modeKey] || 'Relaxation',
+                title: modeNames[modeKey] || 'Relaxation',
+                artist: 'Sleepy Bobby',
                 album: 'Ambiance Naturelle',
-                artwork: [{ src: 'icon.png', sizes: '512x512', type: 'image/png' }]
+                artwork: [
+                    { src: 'maskable_icon_x512.png', sizes: '512x512', type: 'image/png' },
+                    { src: 'maskable_icon_x512.png', sizes: '192x192', type: 'image/png' }
+                ]
             });
-            navigator.mediaSession.setActionHandler('play', () => { if(!isPlaying) startBobby(); });
-            navigator.mediaSession.setActionHandler('pause', () => { if(isPlaying) stopBobby(); });
-            navigator.mediaSession.setActionHandler('stop', stopBobby);
+
             navigator.mediaSession.playbackState = "playing";
         }
     }
 
-    async function startBobby() {
-        if(isPlaying) {
-            stopBobby();
-            return;
+    async function startAudio(mode) {
+        if (fxInterval) clearTimeout(fxInterval);
+        
+        await initAudioContext();
+
+        const url = SOUND_FILES[mode];
+        if (url) {
+            mainAudioPlayer.src = url;
+            mainAudioPlayer.volume = document.getElementById('volume').value;
+            
+            try {
+                await mainAudioPlayer.play();
+                updateMediaMetadata(mode);
+            } catch (e) {
+                console.error(e);
+            }
         }
+
+        if (mode === 'storm') fxLoop('thunder', 8000, 20000);
+        else if (mode === 'fire') fxLoop('crackle', 3000, 10000);
+    }
+
+    function stopAudio(fullStop = true) {
+        mainAudioPlayer.pause();
+        if (fxInterval) clearTimeout(fxInterval);
+        if (fullStop && 'mediaSession' in navigator) {
+            navigator.mediaSession.playbackState = "paused";
+        }
+    }
+
+    function updateVolume(val) {
+        mainAudioPlayer.volume = val;
+        if (masterGain) masterGain.gain.setTargetAtTime(val, audioCtx.currentTime, 0.1);
+    }
+
+    async function startBobby() {
+        if(isPlaying) { stopBobby(); return; } 
         
         await requestWakeLock();
 
@@ -454,8 +451,8 @@
         document.getElementById('bobbyBox').classList.add('playing');
         
         const mode = document.getElementById('modeSelect').value;
-        updateMediaSession(mode);
-
+        
+        setupMediaSession();
         await startAudio(mode);
         updateVisuals();
 
@@ -467,30 +464,12 @@
         }
     }
 
-    function startTimerLoop() {
-        if(countdownInterval) clearInterval(countdownInterval);
-        const s = document.getElementById('timerSelect');
-        const selectedOption = s.options[s.selectedIndex];
-        
-        countdownInterval = setInterval(() => {
-            const now = Date.now();
-            const diff = Math.ceil((endTime - now) / 1000);
-            if (diff <= 0) stopBobby();
-            else {
-                let m = Math.floor(diff / 60);
-                let sec = diff % 60;
-                selectedOption.text = `${m}:${sec < 10 ? '0' : ''}${sec} restant`;
-            }
-        }, 1000);
-    }
-
     function stopBobby() {
         isPlaying = false;
         
-        if (wakeLock !== null) { wakeLock.release().then(() => { wakeLock = null; }); }
+        if (wakeLock !== null) { wakeLock.release().then(() => wakeLock = null).catch(e=>{}); }
 
-        stopAudio(true);
-        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
+        stopAudio(true); 
 
         document.getElementById('bobbyBox').classList.remove('playing', 'sway-active');
         document.querySelector('.card').classList.remove('lightning-active'); 
@@ -502,129 +481,30 @@
         document.querySelectorAll('.zzz').forEach(e => e.remove());
         
         document.getElementById('riverParallaxContainer').classList.remove('active');
-        document.getElementById('birdMain').style.boxShadow = "none";
         document.getElementById('bChest').style.filter = "none";
+        document.getElementById('birdMain').style.boxShadow = "none";
         resetTimerLabels();
     }
 
-    function updateVisuals() {
-        const f = document.getElementById('animContainer');
-        const b = document.getElementById('bgAnimContainer'); 
-        const m = document.getElementById('modeSelect').value;
-        
-        f.innerHTML = ''; 
-        b.innerHTML = ''; 
-        clearInterval(visualInterval);
-        
-        const box = document.getElementById('bobbyBox');
-        box.classList.remove('sway-active');
-        
-        document.getElementById('bChest').style.filter = "none";
-        document.querySelector('.card').classList.remove('lightning-active'); 
+    mainAudioPlayer.addEventListener('play', () => {
+        if('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
+    });
 
-        const riverPara = document.getElementById('riverParallaxContainer');
-        if (m === 'river') {
-            riverPara.classList.add('active');
-        } else {
-            riverPara.classList.remove('active');
-        }
+    mainAudioPlayer.addEventListener('pause', () => {
+        if('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
+    });
 
-        if (m === 'space') {
-             for(let i=0; i<80; i++) { 
-                let s = document.createElement('div');
-                s.className = 'astro';
-                const startXPerc = Math.random() * 100;
-                const startYPerc = Math.random() * 100;
-                s.style.left = startXPerc + '%';
-                s.style.top = startYPerc + '%';
-                const destX = (startXPerc - 50) * 5 + 'vw';
-                const destY = (startYPerc - 50) * 5 + 'vh'; 
-                s.style.setProperty('--dest-x', destX);
-                s.style.setProperty('--dest-y', destY);
-                const duration = 3 + Math.random() * 6; 
-                s.style.animationDuration = duration + 's';
-                s.style.animationDelay = '-' + (Math.random() * duration) + 's';
-                let scale = Math.random();
-                s.style.width = s.style.height = (2 + scale * 4) + 'px';
-                b.appendChild(s); 
-            }
-        }
-        
-        if (m === 'waves') {
-            for(let i=0;i<3;i++){
-                let w=document.createElement('div');
-                w.className='wave-line';
-                w.style.animationDelay=(i*3)+'s';
-                b.appendChild(w);
-            }
-        }
-
-        const intervalDelay = 
-            (m === 'rain' || m === 'storm') ? 100 : 
-            (m === 'stream') ? 400 :
-            (m === 'pink') ? 1000 : 600;
-
-        visualInterval = setInterval(() => {
-            if(!isPlaying) return;
-            
-            if (m === 'wind') {
-                let el = document.createElement('div'); el.className='leaf';
-                el.style.left = Math.random()*100+'%'; el.style.top='-20px';
-                el.style.backgroundColor=['#4ade80', '#22c55e', '#86efac'][Math.floor(Math.random()*3)];
-                f.appendChild(el); setTimeout(()=>el.remove(), 6000);
-            
-            } else if (m === 'rain' || m === 'storm') {
-                for(let k=0; k<2; k++){
-                    let el = document.createElement('div'); el.className='drop';
-                    el.style.left = Math.random()*100+'%'; 
-                    el.style.top = '-20px';
-                    el.style.animationDuration = (0.6 + Math.random()*0.3) + 's';
-                    f.appendChild(el); setTimeout(()=>el.remove(), 1000);
-                }
-
-            } else if (m === 'fire') {
-                 if (!b.querySelector('.fire-glow')) { let glow = document.createElement('div'); glow.className = 'fire-glow'; b.appendChild(glow); setTimeout(() => glow.style.opacity = 1, 10); }
-                 let el = document.createElement('div'); el.className='ember';
-                 el.style.left = (45 + Math.random()*10) + '%'; 
-                 el.style.bottom = '15%';
-                 el.style.background = ['#fb923c', '#fca5a5', '#fdba74'][Math.floor(Math.random()*3)];
-                 f.appendChild(el); setTimeout(()=>el.remove(), 4000);
-                 const i = 0.9 + Math.random() * 0.3; document.getElementById('bChest').style.filter = `brightness(${i}) saturate(1.2)`;
-            
-            } else if (m === 'stream') {
-                let el = document.createElement('div'); el.className='stream-speck';
-                el.style.left = Math.random()*100+'%';
-                el.style.bottom = '0';
-                f.appendChild(el); setTimeout(()=>el.remove(), 6000);
-                
-                let bub = document.createElement('div'); bub.className='stream-bubble';
-                bub.style.left = Math.random()*100+'%';
-                let s = 10 + Math.random()*40;
-                bub.style.width=s+'px'; bub.style.height=s+'px';
-                bub.style.animationDuration = (8+Math.random()*10)+'s';
-                b.appendChild(bub); setTimeout(()=>bub.remove(), 18000);
-            
-            } else if (m === 'pink') {
-                let el = document.createElement('div');
-                el.className = 'zzz';
-                el.textContent = 'z';
-                el.style.left = '100px'; 
-                el.style.top = '20px';
-                document.getElementById('bobbyBox').appendChild(el);
-                setTimeout(()=>el.remove(), 4000);
-            }
-        }, intervalDelay);
-
-        if (m === 'wind') {
-            box.classList.add('sway-active');
-        }
-    }
+    mainAudioPlayer.addEventListener('ended', () => {
+         if(isPlaying) {
+             mainAudioPlayer.currentTime = 0;
+             mainAudioPlayer.play();
+         }
+    });
 
     document.addEventListener("visibilitychange", async () => {
         if (!document.hidden && isPlaying) {
             if (audioCtx && audioCtx.state === 'suspended') await audioCtx.resume();
             if (wakeLock === null) await requestWakeLock();
-            // Le lecteur audio natif reprend tout seul s'il n'a pas été tué, sinon on le relance
             if (mainAudioPlayer.paused) mainAudioPlayer.play();
         }
     });
@@ -632,9 +512,9 @@
     document.getElementById('modeSelect').addEventListener('change', async (e) => {
         if (isPlaying) {
             const newMode = e.target.value;
+            updateMediaMetadata(newMode);
             await startAudio(newMode);
             updateVisuals(); 
-            updateMediaSession(newMode);
         }
     });
 
