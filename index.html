@@ -308,6 +308,25 @@
         Array.from(s.options).forEach(o => o.text = o.getAttribute('data-base')); 
     }
 
+    function startTimerLoop() {
+        clearInterval(countdownInterval);
+        countdownInterval = setInterval(() => {
+            const remaining = endTime - Date.now();
+            if (remaining <= 0) {
+                stopBobby();
+            } else {
+                const m = Math.floor(remaining / 60000);
+                const s = Math.floor((remaining % 60000) / 1000);
+                const sel = document.getElementById('timerSelect');
+                const opt = sel.options[sel.selectedIndex];
+                if(opt) {
+                    const base = opt.getAttribute('data-base');
+                    opt.text = `${base} (${m}m ${s}s)`;
+                }
+            }
+        }, 1000);
+    }
+
     async function requestWakeLock() {
         if ('wakeLock' in navigator) {
             try { 
@@ -440,6 +459,119 @@
         if (masterGain) masterGain.gain.setTargetAtTime(val, audioCtx.currentTime, 0.1);
     }
 
+    function updateVisuals() {
+        const f = document.getElementById('animContainer');
+        const b = document.getElementById('bgAnimContainer'); 
+        const m = document.getElementById('modeSelect').value;
+        
+        f.innerHTML = ''; 
+        b.innerHTML = ''; 
+        clearInterval(visualInterval);
+        
+        const box = document.getElementById('bobbyBox');
+        box.classList.remove('sway-active');
+        
+        document.getElementById('bChest').style.filter = "none";
+        document.querySelector('.card').classList.remove('lightning-active'); 
+
+        const riverPara = document.getElementById('riverParallaxContainer');
+        if (m === 'river') {
+            riverPara.classList.add('active');
+        } else {
+            riverPara.classList.remove('active');
+        }
+
+        if (m === 'space') {
+             for(let i=0; i<80; i++) { 
+                let s = document.createElement('div');
+                s.className = 'astro';
+                const startXPerc = Math.random() * 100;
+                const startYPerc = Math.random() * 100;
+                s.style.left = startXPerc + '%';
+                s.style.top = startYPerc + '%';
+                const destX = (startXPerc - 50) * 5 + 'vw';
+                const destY = (startYPerc - 50) * 5 + 'vh'; 
+                s.style.setProperty('--dest-x', destX);
+                s.style.setProperty('--dest-y', destY);
+                const duration = 3 + Math.random() * 6; 
+                s.style.animationDuration = duration + 's';
+                s.style.animationDelay = '-' + (Math.random() * duration) + 's';
+                let scale = Math.random();
+                s.style.width = s.style.height = (2 + scale * 4) + 'px';
+                b.appendChild(s); 
+            }
+        }
+        
+        if (m === 'waves') {
+            for(let i=0;i<3;i++){
+                let w=document.createElement('div');
+                w.className='wave-line';
+                w.style.animationDelay=(i*3)+'s';
+                b.appendChild(w);
+            }
+        }
+
+        const intervalDelay = 
+            (m === 'rain' || m === 'storm') ? 100 : 
+            (m === 'stream') ? 400 :
+            (m === 'pink') ? 1000 : 600;
+
+        visualInterval = setInterval(() => {
+            if(!isPlaying) return;
+            
+            if (m === 'wind') {
+                let el = document.createElement('div'); el.className='leaf';
+                el.style.left = Math.random()*100+'%'; el.style.top='-20px';
+                el.style.backgroundColor=['#4ade80', '#22c55e', '#86efac'][Math.floor(Math.random()*3)];
+                f.appendChild(el); setTimeout(()=>el.remove(), 6000);
+            
+            } else if (m === 'rain' || m === 'storm') {
+                for(let k=0; k<2; k++){
+                    let el = document.createElement('div'); el.className='drop';
+                    el.style.left = Math.random()*100+'%'; 
+                    el.style.top = '-20px';
+                    el.style.animationDuration = (0.6 + Math.random()*0.3) + 's';
+                    f.appendChild(el); setTimeout(()=>el.remove(), 1000);
+                }
+
+            } else if (m === 'fire') {
+                 if (!b.querySelector('.fire-glow')) { let glow = document.createElement('div'); glow.className = 'fire-glow'; b.appendChild(glow); setTimeout(() => glow.style.opacity = 1, 10); }
+                 let el = document.createElement('div'); el.className='ember';
+                 el.style.left = (45 + Math.random()*10) + '%'; 
+                 el.style.bottom = '15%';
+                 el.style.background = ['#fb923c', '#fca5a5', '#fdba74'][Math.floor(Math.random()*3)];
+                 f.appendChild(el); setTimeout(()=>el.remove(), 4000);
+                 const i = 0.9 + Math.random() * 0.3; document.getElementById('bChest').style.filter = `brightness(${i}) saturate(1.2)`;
+            
+            } else if (m === 'stream') {
+                let el = document.createElement('div'); el.className='stream-speck';
+                el.style.left = Math.random()*100+'%';
+                el.style.bottom = '0';
+                f.appendChild(el); setTimeout(()=>el.remove(), 6000);
+                
+                let bub = document.createElement('div'); bub.className='stream-bubble';
+                bub.style.left = Math.random()*100+'%';
+                let s = 10 + Math.random()*40;
+                bub.style.width=s+'px'; bub.style.height=s+'px';
+                bub.style.animationDuration = (8+Math.random()*10)+'s';
+                b.appendChild(bub); setTimeout(()=>bub.remove(), 18000);
+            
+            } else if (m === 'pink') {
+                let el = document.createElement('div');
+                el.className = 'zzz';
+                el.textContent = 'z';
+                el.style.left = '100px'; 
+                el.style.top = '20px';
+                document.getElementById('bobbyBox').appendChild(el);
+                setTimeout(()=>el.remove(), 4000);
+            }
+        }, intervalDelay);
+
+        if (m === 'wind') {
+            box.classList.add('sway-active');
+        }
+    }
+
     async function startBobby() {
         if(isPlaying) { stopBobby(); return; } 
         
@@ -538,6 +670,7 @@
     });
 
     document.getElementById('playBtn').addEventListener('click', startBobby);
+	displayNewPhrase();
 </script>
 </body>
 </html>
