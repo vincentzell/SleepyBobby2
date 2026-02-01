@@ -55,7 +55,7 @@ Merci à ces créateurs pour leurs enregistrements de qualité :
 
 **Développement**
 
-* **Concept & Code :** Zell
+* **Concept :** Zell
 * **Co-pilote technique :** Gemini (IA)
 
 ---
