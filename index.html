@@ -233,6 +233,7 @@
                     <option value="wind">Vent</option>
                     <option value="fire">Cheminée</option>
                     <option value="space">Espace</option>
+					<option value="meditation">Sleepy Jenny</option>
                 </select>
             </div>
 
@@ -277,6 +278,7 @@
     let isPlaying = false;
     let audioCtx, masterGain; 
     let loopSource = null; 
+	let currentFxSource = null;
     let audioBuffers = {}; 
     let endTime = 0;
     let wakeLock = null;
@@ -293,6 +295,7 @@
         wind: 'res/651545__nsstudios__wind-draft-loop-3.wav', 
         fire: 'res/612277__robinhood76__10835-big-fire-loop.wav', 
         space: 'res/676854__darrenpasemko__wind_looping_01.wav'
+		meditation: 'res/Meditative-Ambiance-741-Hz.mp3'
     };
 
     const FX_FILES = {
@@ -380,6 +383,7 @@
         
         const source = audioCtx.createBufferSource();
         source.buffer = buffer;
+		currentFxSource = source;
         const fxGain = audioCtx.createGain();
         fxGain.gain.value = key === 'thunder' ? 2.0 : 0.8; 
         source.connect(fxGain);
@@ -418,6 +422,7 @@
                 stream: "Ruisseau", river: "Rivière", pink: "Bruit Rose",
                 waves: "Vagues", rain: "Pluie", storm: "Orage",
                 wind: "Vent", fire: "Cheminée", space: "Espace"
+				meditation: "Au lit Jenny !"
             };
             
             navigator.mediaSession.metadata = new MediaMetadata({
@@ -477,6 +482,10 @@
         
         if (fxInterval) clearTimeout(fxInterval);
         if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
+		if (currentFxSource) {
+        try { currentFxSource.stop(); } catch(e) {}
+        currentFxSource = null;
+    }
     }
 
     function updateVolume(val) {

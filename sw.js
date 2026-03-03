@@ -18,6 +18,7 @@ const ASSETS = [
   './res/778363__blondpanda__distant_rumbling_thunder_in_rain_02.wav',
   './res/823274__hannagreen__sparks_mediumdensity3.wav',
   './res/silent.wav'
+  './res/Meditative-Ambiance-741-Hz.mp3'
 ];
 
 self.addEventListener('install', (event) => {
