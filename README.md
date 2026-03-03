@@ -1,7 +1,7 @@
 # Sleepy Bobby 🐦💤
 
 Une petite web app minimaliste pour aider à dormir ou se concentrer. 
-Créée pour avoir des boucles de sons vraiment fluides (sans la coupure de 10ms des autres apps) et une lecture qui ne s'arrête pas quand l'écran se verrouille.
+Créée pour avoir des boucles de sons fluides et une lecture qui ne s'arrête pas quand l'écran se verrouille.
 
 👉 **[Accéder au site](https://vincentzell.github.io/SleepyBobby2/)**
 
@@ -31,4 +31,3 @@ Créée pour avoir des boucles de sons vraiment fluides (sans la coupure de 10ms
 * **Code :** Zell & Gemini.
 
 ---
-*Fait avec ❤️ pour des nuits paisibles.*
