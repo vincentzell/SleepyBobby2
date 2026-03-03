@@ -1,62 +1,46 @@
-# Sleepy Bobby 🐦💤
+Sleepy Bobby 🐦💤
 
 Une petite web app minimaliste pour aider à dormir ou se concentrer.
-Je l'ai créée parce que je ne trouvais pas d'appli gratuite qui faisait des boucles de sons **vraiment** parfaites (sans la petite coupure insupportable toutes les 10 secondes).
+Créée pour avoir des boucles de sons vraiment fluides (sans la coupure de 10ms des autres apps) et une lecture qui ne s'arrête pas quand l'écran se verrouille.
 
-👉 **[Accéder au site](https://vincentzell.github.io/SleepyBobby2/)**
+👉 Accéder au site
+Pourquoi cette app ?
 
-## C'est quoi ?
+    Zéro coupure : Utilise l'API Web Audio pour un "gapless playback" réel.
 
-C'est juste un oiseau (Bobby) et des bruits d'ambiance.
-Pas de pubs, pas de tracking, pas d'inscription.
+    Keep-alive : Hack via un fichier audio silencieux pour empêcher iOS/Android de couper le son en veille.
 
-Ce que ça fait de mieux que les autres :
-* **Boucles audio invisibles :** Utilise l'API Web Audio pour mixer les sons. On n'entend jamais le moment où le son recommence.
-* **Mode "Écran éteint" :** Ça continue de jouer même si on verrouille le téléphone (grâce à une petite astuce technique).
-* **100% Hors-ligne :** Une fois la page chargée une première fois, elle s'installe comme une appli et marche sans internet (PWA).
-* **Minuteur doux :** Si on met un timer (ex: 30 min), le son baisse tout doucement à la fin pour ne pas réveiller brutalement.
+    100% Hors-ligne : C'est une PWA qui s'installe et fonctionne sans internet.
 
-## Comment l'installer sur mobile
+    Minuteur doux : Le son baisse progressivement à la fin pour ne pas réveiller brutalement.
 
-C'est une PWA (Progressive Web App). Pas besoin de passer par l'App Store.
+Ambiances
 
-1.  Allez sur le site avec Chrome (Android) ou Safari (iOS).
-2.  **Android :** Menu > "Ajouter à l'écran d'accueil".
-3.  **iOS :** Bouton Partage > "Sur l'écran d'accueil".
+    Nature : Ruisseau, Rivière, Vagues, Vent.
 
-## Pour les curieux (Tech)
+    Météo : Pluie, Orage (tonnerre aléatoire).
 
-C'est du **Vanilla JS** pur. Pas de React, pas de framework, pas de `npm install` de l'enfer. Juste de l'HTML, du CSS et du JS.
+    Focus : Bruit Rose, Espace, Méditation 741 Hz.
 
-Les points intéressants du code :
-* `AudioContext` pour le *gapless playback* (lecture sans coupure).
-* Un fichier `silent.wav` joué en boucle via une balise `<audio>` standard pour empêcher iOS/Android de tuer le processus quand l'écran est noir.
-* Un Service Worker (`sw.js`) pour la mise en cache agressive (offline first).
+    Confort : Cheminée (craquements dynamiques).
 
-### Lancer en local
-Si vous voulez bricoler dessus (nécessaire à cause des Service Workers) :
+Installation mobile
 
-    # Exemple avec Python
-    python3 -m http.server
-    # Puis ouvrir localhost:8000
+    Ouvrir le site sur Safari (iOS) ou Chrome (Android).
 
-## Crédits
+    Choisir "Sur l'écran d'accueil" dans le menu de partage ou les options.
 
-**Sons (Freesound.org - Creative Commons)**
-Merci à ces créateurs pour leurs enregistrements de qualité :
+Tech
 
-* **Ruisseau :** NickTayloe
-* **Rivière :** eardeer
-* **Vagues :** Nox_Sound
-* **Pluie / Orage :** digifishmusic, BlondPanda
-* **Vent / Espace :** nsstudios, darrenpasemko
-* **Feu :** Robinhood76, hannagreen
-* **Bruit Rose :** newagesoup
+    Vanilla JS pur (pas de framework, pas de npm).
 
-**Développement**
+    AudioContext pour la gestion des buffers.
 
-* **Concept :** Zell
-* **Co-pilote technique :** Gemini (IA)
+    Service Worker pour le cache et le mode hors-ligne.
 
----
-*Fait avec ❤️ pour des nuits paisibles.*
+
+Crédits
+
+    Sons : Freesound.org (NickTayloe, eardeer, Nox_Sound, digifishmusic, BlondPanda, nsstudios, darrenpasemko, Robinhood76, hannagreen, newagesoup).
+
+    Code : Zell & Gemini.
